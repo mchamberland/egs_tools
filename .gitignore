@@ -1,0 +1,5 @@
+*.dcm
+test/*.dcm
+test/VC_HDR_MC1/*
+test/*.zip
+anon/*
