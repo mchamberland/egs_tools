@@ -3,3 +3,5 @@ test/VC_HDR_MC1/*
 test/*.zip
 .idea/
 anon/
+*.pyc
+*__pycache__
