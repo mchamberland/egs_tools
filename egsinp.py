@@ -90,7 +90,8 @@ class EGSinp:
         if deactivate_global_range_rejection:
             range_rejection_str += "global range rejection = no\n"
 
-        input_block = "{0}\n\t{1}\n\t{2}\n{3}\n".format(start_delimiter, recycling_str, range_rejection_str, stop_delimiter)
+        input_block = "{0}\n\t{1}\n\t{2}\n{3}\n".format(start_delimiter, recycling_str, range_rejection_str,
+                                                        stop_delimiter)
         self.input_file.write(input_block)
 
     def scoring_options(self, score_tracklength=True, score_edep=False, score_scatter=False,
@@ -146,7 +147,7 @@ class EGSinp:
                                                                              up_str, material_str, stop_delimiter)
         self.input_file.write(input_block)
 
-    def source(self, source_type="isotropic", transformations="single_seed_at_origin", phsp=None):
+    def source(self, source_type="isotropic", transformations="single_seed_at_origin", phsp=None, weights=None):
         start_delimiter = ":start source definition:\n\t:start source:\n\t\t"
         stop_delimiter = ":stop source definition:\n"
         source_str = "name = " + self.source_model + "\n\t\t"
@@ -155,12 +156,30 @@ class EGSinp:
         if source_type == "isotropic":
             library_str = "library = egs_isotropic_source\n\t\t"
             charge_str = "charge = 0\n\t\t"
+            phsp_header_str = ""
 
         elif phsp is not None:
             library_str = "library = eb_iaeaphsp_source\n\t\t"
             phsp_header_str = "header file = " + self.root + "lib/phsp/" + phsp + ".IAEAheader\n\t"
         else:
             library_str = ""
+            phsp_header_str = ""
+
+        start_transformations_delimiter = ":start transformations:\n\t\t"
+        stop_transformations_delimiter = ":stop transformations:\n\n\t"
+        transformations_str = "include file = " + self.root + "lib/geometry/transformations/" + transformations + "\n\t"
+
+        weights_str = ""
+        if weights is not None:
+            weights_str = "source weights = " + "".join(format(w, ":.2f") for w in weights) + "\n\t"
 
         simulation_source_str = "simulation source = " + self.source_model + "\n"
 
+        input_block = "{0}{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}".format(start_delimiter, source_str, library_str, charge_str,
+                                                                  phsp_header_str, start_transformations_delimiter,
+                                                                  transformations_str, stop_transformations_delimiter,
+                                                                  weights_str, simulation_source_str, stop_delimiter)
+
+        self.input_file.write(input_block)
+
+    def geometry(self, phantom, transformations="single_seed_at_origin", ):
