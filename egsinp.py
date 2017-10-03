@@ -22,14 +22,14 @@ class EGSinp:
 
     """
 
-    SOURCE_RADIONUCLIDE = {'OncoSeed_6711': 'I125',
-                           'TheraSeed_200': 'Pd103',
-                           'microSelectron-v2': 'Ir192',
-                           'GammaMedPlus': 'Ir192'}
+    SOURCE_RADIONUCLIDE = {'OncoSeed_6711': 'I125_LDR',
+                           'TheraSeed_200': 'Pd103_LDR',
+                           'microSelectron-v2': 'Ir192_HDR',
+                           'GammaMedPlus': 'Ir192_HDR'}
 
-    RADIONUCLIDE_SPECTRUM = {'I125': 'I125_NCRP_line',
-                             'Pd103': 'Pd103_NNDC_2.6_line',
-                             'Ir192': 'Ir192_NNDC_2.6_line'}
+    RADIONUCLIDE_SPECTRUM = {'I125_LDR': 'I125_NCRP_line',
+                             'Pd103_LDR': 'Pd103_NNDC_2.6_line',
+                             'Ir192_HDR': 'Ir192_NNDC_2.6_line'}
 
     def __init__(self, filename="egsinp", source_model="OncoSeed_6711", path_type="relative"):
         """Create a skeleton to build an egsinp file for egs_brachy"""
@@ -76,8 +76,8 @@ class EGSinp:
         stop_delimiter = ":stop variance reduction:\n"
 
         if do_recycling:
-            recycling_str = ":start particle recycling:\n\t\t"
-            recycling_str += "times to reuse recycled particles = " + str(recycling_number) + "\n\t\t"
+            recycling_str = ":start particle recycling:\n\t"
+            recycling_str += "times to reuse recycled particles = " + str(recycling_number) + "\n\t"
             recycling_str += "rotate recycled particles = yes\n"
             recycling_str += ":stop particle recycling:\n"
         else:
@@ -90,7 +90,8 @@ class EGSinp:
         if deactivate_global_range_rejection:
             range_rejection_str += "global range rejection = no\n"
 
-        input_block = "{0}\n\t{1}\n\t{2}\n{3}\n".format(start_delimiter, recycling_str, range_rejection_str, stop_delimiter)
+        input_block = "{0}\n\t{1}\n\t{2}\n{3}\n".format(start_delimiter, recycling_str, range_rejection_str,
+                                                        stop_delimiter)
         self.input_file.write(input_block)
 
     def scoring_options(self, score_tracklength=True, score_edep=False, score_scatter=False,
@@ -149,13 +150,17 @@ class EGSinp:
     def source(self, source_type="isotropic", transformations="single_seed_at_origin", phsp=None):
         start_delimiter = ":start source definition:\n\t:start source:\n\t\t"
         stop_delimiter = ":stop source definition:\n"
+        stop_source_delimiter = ":stop source:\n\t"
         source_str = "name = " + self.source_model + "\n\t\t"
         charge_str = ""
+        phsp_header_str = ""
+        include_str = ""
 
         if source_type == "isotropic":
             library_str = "library = egs_isotropic_source\n\t\t"
             charge_str = "charge = 0\n\t\t"
-
+            include_str = "include file = " + self.root + "lib/geometry/sources/" + self.SOURCE_RADIONUCLIDE[self.source_model] + "/" +\
+                          self.source_model + "/" + self.source_model + ".shape\n\t\t"
         elif phsp is not None:
             library_str = "library = eb_iaeaphsp_source\n\t\t"
             phsp_header_str = "header file = " + self.root + "lib/phsp/" + phsp + ".IAEAheader\n\t"
@@ -163,4 +168,59 @@ class EGSinp:
             library_str = ""
 
         simulation_source_str = "simulation source = " + self.source_model + "\n"
+        start_transformations_delimiter = ":start transformations:\n\t\t"
+        stop_transformations_delimiter = ":stop transformations:\n\t"
+        transformations_str = "include file = " + self.root + "lib/geometry/transformations/" + transformations + "\n\t"
 
+        start_spectrum_delimiter = ":start spectrum:\n\t\t\t"
+        stop_spectrum_delimiter = ":stop spectrum:\n\t"
+        spectrum_type_str = "type = tabulated spectrum\n\t\t\t"
+        spectrum_file_str = "spectrum file = " + self.root + "lib/spectra/{0}.spectrum\n\t\t".format(
+            self.RADIONUCLIDE_SPECTRUM[self.source_model])
+
+        input_block = "{0}{1}{2}{3}{4}{5}{6}{7}{8}{9}{10}{11}{12}{13}{14}{15}".format(start_delimiter, source_str,
+                                                                                      library_str, charge_str,
+                                                                                      include_str, phsp_header_str,
+                                                                                      start_spectrum_delimiter,
+                                                                                      spectrum_type_str,
+                                                                                      spectrum_file_str,
+                                                                                      stop_spectrum_delimiter,
+                                                                                      stop_source_delimiter,
+                                                                                      start_transformations_delimiter,
+                                                                                      transformations_str,
+                                                                                      stop_transformations_delimiter,
+                                                                                      simulation_source_str,
+                                                                                      stop_delimiter)
+        self.input_file.write(input_block)
+
+    def volume_correction(self, correction="correct", density=1e8):
+        start_delimiter = ":start volume correction:\n\t:start source volume correction:\n\t\t"
+        correction_str = "correction type = {0}\n\t\t".format(correction)
+        density_str = "density of random points (cm^-3) = {0}\n\t\t".format(str(density))
+        shape_str = "include file = " + self.root + "lib/geometry/sources/{0}/{1}/boundary.shape\n\t".format(
+            self.SOURCE_RADIONUCLIDE[self.source_model], self.source_model)
+        stop_delimiter = ":stop source volume correction:\n:stop volume correction:\n\n"
+        input_block = "{0}{1}{2}{3}{4}".format(start_delimiter, correction_str, density_str, shape_str, stop_delimiter)
+        self.input_file.write(input_block)
+
+    def geometry(self, box=None, phantom=None, superposition=False):
+        start_delimiter = ":start geometry definition:"
+
+        start_geometry_delimiter = ":start geometry:"
+        stop_geometry_delimiter = ":stop geometry:"
+
+        box_block = ""
+        if box is not None:
+            name_str = "name = box"
+            library_str = "library = egs_glib"
+            include_str = "include file = " + self.root + "lib/geometry/phantoms/{0}.geom".format(box)
+            box_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
+                                                                         library_str, include_str,
+                                                                         stop_geometry_delimiter)
+
+        name_str = "name = phantom"
+        library_str = "library = egs_glib"
+        include_str = "include file = " + self.root + "lib/geometry/phantoms/{0}.geom".format(phantom)
+        box_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
+                                                                     library_str, include_str,
+                                                                     stop_geometry_delimiter)
