@@ -91,21 +91,30 @@ class DoseDistribution:
 
         if filename.endswith('gz'):
             with gzip.open(filename, 'r') as file:
-                lines = file.readlines()
+                values = [float(v) for line in file.readlines() for v in line.split()]
         else:
             with open(filename, 'r') as file:
-                lines = file.readlines()
+                values = [float(v) for line in file.readlines() for v in line.split()]
 
-        self.dimensions = list(map(int, lines[0].split()))
-        self.bounds = [list(map(float, line.split())) for line in lines[1:4]]
+        self.dimensions = [int(values[i]) for i in range(0, 3)]
 
-        dose = np.array(list(map(float, lines[4].split())))
+        xmin = 3
+        xmax = xmin + self.dimensions[0] + 1
+        ymax = xmax + self.dimensions[1] + 1
+        zmax = ymax + self.dimensions[2] + 1
+        min_index = (xmin, xmax, ymax)
+        max_index = (xmax, ymax, zmax)
+        self.bounds = [[values[i] for i in range(min_index[j], max_index[j])] for j in range(0, 3)]
+
+        dose_min_index = zmax
+        dose_max_index = dose_min_index + self.nvox()
+        dose = np.array(values[dose_min_index:dose_max_index])
         dose = dose.reshape(self.dimensions, order='F')
 
-        fract_unc = np.array(list(map(float, lines[5].split())))
-        fract_unc = fract_unc.reshape(self.dimensions, order='F')
+        fractional_uncertainty = np.array(values[dose_max_index:])
+        fractional_uncertainty = fractional_uncertainty.reshape(self.dimensions, order='F')
 
-        return dose, fract_unc
+        return dose, fractional_uncertainty
 
     def write_dose(self, filename):
         """Write a dose distribution to a 3ddose file specified by filename
