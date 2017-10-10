@@ -66,5 +66,6 @@ class TestDoseDistribution(unittest.TestCase):
         self.assertAlmostEqual(min_dose, self.dose.get_min_dose()[0], 7, 'incorrect min dose')
         self.assertAlmostEqual(unc, self.dose.get_min_dose()[1], 7, 'incorrect unc on min dose')
 
+
 if __name__ == '__main__':
     unittest.main()
