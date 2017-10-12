@@ -31,6 +31,16 @@ class EGSinp:
                              'Pd103_LDR': 'Pd103_NNDC_2.6_line',
                              'Ir192_HDR': 'Ir192_NNDC_2.6_line'}
 
+    MEAN_LIFETIME_IN_HOURS = {'I125_LDR': 2056.7,
+                              'Pd103_LDR': 588.3,
+                              'Ir192_HDR': 2556.3}
+
+    # in units of Gy cm^2 hist^-1
+    SOURCE_AIR_KERMA_STRENGTH_PER_HISTORY = {'OncoSeed_6711': 3.7651E-14,
+                                             'TheraSeed_200': 6.4255E-14,
+                                             'microSelectron-v2': 1.1517E-13,
+                                             'GammaMedPlus': 1.1592E-13}
+
     def __init__(self, filename="egsinp", source_model="OncoSeed_6711", path_type="relative"):
         """Create a skeleton to build an egsinp file for egs_brachy"""
         self.root = ""
@@ -159,7 +169,8 @@ class EGSinp:
         if source_type == "isotropic":
             library_str = "library = egs_isotropic_source\n\t\t"
             charge_str = "charge = 0\n\t\t"
-            include_str = "include file = " + self.root + "lib/geometry/sources/" + self.SOURCE_RADIONUCLIDE[self.source_model] + "/" +\
+            include_str = "include file = " + self.root + "lib/geometry/sources/" +\
+                          self.SOURCE_RADIONUCLIDE[self.source_model] + "/" +\
                           self.source_model + "/" + self.source_model + ".shape\n\t\t"
         elif phsp is not None:
             library_str = "library = eb_iaeaphsp_source\n\t\t"
@@ -197,13 +208,15 @@ class EGSinp:
         start_delimiter = ":start volume correction:\n\t:start source volume correction:\n\t\t"
         correction_str = "correction type = {0}\n\t\t".format(correction)
         density_str = "density of random points (cm^-3) = {0}\n\t\t".format(str(density))
-        shape_str = "include file = " + self.root + "lib/geometry/sources/{0}/{1}/boundary.shape\n\t".format(
+        boundary_str = "include file = " + self.root + "lib/geometry/sources/{0}/{1}/boundary.shape\n\t".format(
             self.SOURCE_RADIONUCLIDE[self.source_model], self.source_model)
         stop_delimiter = ":stop source volume correction:\n:stop volume correction:\n\n"
-        input_block = "{0}{1}{2}{3}{4}".format(start_delimiter, correction_str, density_str, shape_str, stop_delimiter)
+        input_block = "{0}{1}{2}{3}{4}".format(start_delimiter, correction_str, density_str, boundary_str,
+                                               stop_delimiter)
         self.input_file.write(input_block)
 
-    def geometry(self, box=None, phantom=None, superposition=False):
+    def geometry(self, box=None, phantom=None, egsphant=None, transformations="single_seed_at_origin",
+                 discovery_action="discover", density=1e8, superposition=False):
         start_delimiter = ":start geometry definition:"
 
         start_geometry_delimiter = ":start geometry:"
@@ -217,10 +230,86 @@ class EGSinp:
             box_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
                                                                          library_str, include_str,
                                                                          stop_geometry_delimiter)
+        phantom_block = ""
+        if phantom is not None:
+            name_str = "name = phantom"
+            library_str = "library = egs_glib"
+            include_str = "include file = " + self.root + "lib/geometry/phantoms/{0}.geom".format(phantom)
+            phantom_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
+                                                                             library_str, include_str,
+                                                                             stop_geometry_delimiter)
+        egsphant_block = ""
+        if egsphant is not None:
+            name_str = "name = phantom"
+            library_str = "library = egs_glib"
+            type_str = "type = egsphant"
+            egsphant_str = "egsphant file = " + self.root +\
+                           "lib/geometry/phantoms/egsphant/{0}.egsphant".format(egsphant)
+            egsphant_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
+                                                                              library_str, type_str, egsphant_str,
+                                                                              stop_geometry_delimiter)
 
-        name_str = "name = phantom"
+        name_str = "name = seed"
         library_str = "library = egs_glib"
-        include_str = "include file = " + self.root + "lib/geometry/phantoms/{0}.geom".format(phantom)
-        box_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
-                                                                     library_str, include_str,
-                                                                     stop_geometry_delimiter)
+        include_str = "include file = " + self.root + "lib/geometry/sources/{0}/{1}/{1}.shape\n\t".format(
+            self.SOURCE_RADIONUCLIDE[self.source_model], self.source_model)
+        seed_block = "{0}\n\t\t{1}\n\t\t{2}\n\t\t{3}\n\t{4}\n".format(start_geometry_delimiter, name_str,
+                                                                      library_str, include_str,
+                                                                      stop_geometry_delimiter)
+
+        name_str = "name = phantom_and_seeds"
+        library_str = "egs_autoenvelope"
+        type_str = ""
+        if superposition is True:
+            type_str = "EGS_ASwitchedEnvelope"
+        base_geometry_str = "base geometry = phantom"
+
+        start_inscribed_geometry_delimiter = ":start inscribed geometry:"
+        stop_inscribed_geometry_delimiter = ":stop inscribed geometry:"
+        inscribed_geom_str = "inscribed geometry name = seed"
+
+        start_transformations_delimiter = ":start transformations:"
+        stop_transformations_delimiter = ":stop transformations:"
+        transformations_str = "include file = " + self.root + "lib/geometry/transformations/" + transformations
+        transformations_block = "{0}\n\t{1}\n{2}".format(start_transformations_delimiter,
+                                                         transformations_str,
+                                                         stop_transformations_delimiter)
+
+        start_discovery_delimiter = ":start region discovery:"
+        stop_discovery_delimiter = ":stop region discovery:"
+        discovery_str = "action = " + discovery_action
+        density_str = "density of random points (cm^-3) = {0}".format(density)
+        boundary_str = "include file = {0}lib/geometry/sources/{1}/{2}/boundary.shape".format(self.root,
+                                                                                              self.SOURCE_RADIONUCLIDE[
+                                                                                                  self.source_model],
+                                                                                              self.source_model)
+        discovery_block = "{0}\n\t{1}\n\t{2}\n\t{3}\n{4}".format(start_discovery_delimiter,
+                                                                 discovery_str,
+                                                                 density_str,
+                                                                 boundary_str,
+                                                                 stop_discovery_delimiter)
+
+        inscribed_geom_block = "{0}\n\t{1}\n\n\t{2}\n\n{3}".format(start_inscribed_geometry_delimiter,
+                                                                   inscribed_geom_str,
+                                                                   transformations_block,
+                                                                   discovery_block,
+                                                                   stop_inscribed_geometry_delimiter)
+
+        autoenvelope_block = "{0}\n\t{1}\n\t{2}\n\t{3}\n\t{4}\n\n\t{5}\n{6}".format(start_geometry_delimiter,
+                                                                                    name_str,
+                                                                                    library_str,
+                                                                                    type_str,
+                                                                                    base_geometry_str,
+                                                                                    inscribed_geom_block,
+                                                                                    stop_geometry_delimiter)
+
+        source_geom_str = "source geometries = seed"
+        phantom_geom_str = "phantom geometries = phantom"
+        switched_envelope_str = ""
+        if superposition is True:
+            switched_envelope_str = "source envelope geometry = phantom_and_seeds"
+
+        simulation_geom_str = "simulation geometry = "
+
+
+
