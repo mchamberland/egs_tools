@@ -151,6 +151,11 @@ class DoseDistribution:
 
         return np.max(self.dose), self.fract_unc[max_index]
 
+    def get_max_dose_and_ijk(self) -> (float, float, tuple):
+        max_index = np.unravel_index(np.argmax(self.dose), tuple(self.dimensions))
+
+        return np.max(self.dose), self.fract_unc[max_index], max_index
+
     def get_min_dose(self) -> (float, float):
         """Return the minimum dose of the distribution and its fractional uncertainty
 
@@ -160,6 +165,11 @@ class DoseDistribution:
         min_index = np.unravel_index(np.argmin(self.dose), tuple(self.dimensions))
 
         return np.min(self.dose), self.fract_unc[min_index]
+
+    def get_min_dose_and_ijk(self) -> (float, float, tuple):
+        min_index = np.unravel_index(np.argmin(self.dose), tuple(self.dimensions))
+
+        return np.max(self.dose), self.fract_unc[min_index], min_index
 
     def get_point_dose(self, pos: Tuple[float, float, float]) -> (float, float):
         """Return the dose and its fractional uncertainty in the voxel containing position (x, y, z)
@@ -171,6 +181,10 @@ class DoseDistribution:
             (float, float): the dose and its fractional uncertainty
         """
         index = voxelnav.get_ijk_from_xyz(pos, self.bounds)
+
+        return self.dose[index], self.fract_unc[index]
+
+    def get_point_dose_from_ijk(self, index: Tuple[int, int, int]) -> (float, float):
 
         return self.dose[index], self.fract_unc[index]
 
