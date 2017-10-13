@@ -158,7 +158,7 @@ class EGSinp:
 
         if rakr is not None:
             dose_scaling_factor = self.calculate_dose_scaling_factor(rakr)
-            scaling_str = "dose scaling factor = ".format(dose_scaling_factor)
+            scaling_str = "dose scaling factor = {}".format(dose_scaling_factor)
         else:
             scaling_str = "dose scaling factor = 1"
 
@@ -255,7 +255,7 @@ class EGSinp:
             the_weights = " ".join(str(w) for w in weights)
             weights_str = "source weights = {}".format(the_weights)
         elif self.dwell_times_in_s is not None:
-            weights = self.get_source_weights_from_dwell_times()
+            weights = self.get_weights_from_dwell_times()
             the_weights = " ".join(str(w) for w in weights)
             weights_str = "source weights = {}".format(the_weights)
 
@@ -487,17 +487,16 @@ class EGSinp:
             dose_scaling_factor = rakr * lifetime / self.airkerma_per_hist / 100
 
         elif self.SOURCE_RADIONUCLIDE[self.source_model].endswith("HDR"):
-            dose_scaling_factor = rakr * self.total_dwell_time_in_s * max(self.get_source_weights_from_dwell_times())\
-                                  / self.airkerma_per_hist / 3600. / 100.
+            dose_scaling_factor = rakr * self.total_dwell_time_in_s * max(self.get_weights_from_dwell_times())\
+                                  / self.airkerma_per_hist / 3600 / 100
 
         else:
             dose_scaling_factor = 1.
 
         return dose_scaling_factor
 
-    def get_source_weights_from_dwell_times(self):
-        weights = [t / self.dwell_times_in_s for t in self.dwell_times_in_s]
-        return weights
+    def get_weights_from_dwell_times(self):
+        return [t / self.total_dwell_time_in_s for t in self.dwell_times_in_s]
 
     def set_dwell_times_in_s(self, dwell_times=None):
         self.dwell_times_in_s = dwell_times
