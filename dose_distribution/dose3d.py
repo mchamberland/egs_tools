@@ -171,7 +171,7 @@ class DoseDistribution:
 
         return np.max(self.dose), self.fract_unc[min_index], min_index
 
-    def get_point_dose(self, pos: Tuple[float, float, float]) -> (float, float):
+    def get_point_dose_from_xyz(self, pos: Tuple[float, float, float]) -> (float, float):
         """Return the dose and its fractional uncertainty in the voxel containing position (x, y, z)
 
         Args:
