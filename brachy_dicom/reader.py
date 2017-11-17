@@ -1,6 +1,9 @@
 from os import listdir
 from os.path import join, isfile, splitext
 import pydicom
+import numpy as np
+from typing import Tuple
+import datetime
 
 
 def list_all_files_in_directory(directory='.'):
@@ -53,7 +56,8 @@ def read_structure_files_in_directory():
     return filenames, dicom_structs
 
 
-def get_dwells(dicom_file):
+def get_dwells(dicom_file) -> Tuple[np.ndarray, np.ndarray, int]:
+    # positions in mm and times in s
     root = dicom_file.ApplicationSetupSequence[0].ChannelSequence
     number_of_channels = len(root)
     dwell_positions = []
@@ -80,10 +84,51 @@ def get_dwells(dicom_file):
                 dwell_positions.append(current_position)
                 dwell_times.append(current_time - previous_time)
 
-    return dwell_positions, dwell_times, number_of_channels
+    return np.array(dwell_positions), np.array(dwell_times), number_of_channels
 
 
-def read_modality(dicom_file):
-    modality = dicom_file.Modality
+def get_modality(dicom_file):
+    return dicom_file.Modality
 
-    return modality
+
+def get_treatment_type(dicom_file):
+    return dicom_file.BrachyTreatmentType
+
+
+def get_treatment_technique(dicom_file):
+    return dicom_file.BrachyTreatmentTechnique
+
+
+def get_rakr(dicom_file):
+    # in microGy per hour at 1 m
+    return float(dicom_file.SourceSequence[0].ReferenceAirKermaRate)
+
+
+def get_half_life(dicom_file):
+    # in days
+    return float(dicom_file.SourceSequence[0].SourceIsotopeHalfLife)
+
+
+def get_source_strength_reference_date_and_time(dicom_file):
+    date = dicom_file.SourceSequence[0].SourceStrengthReferenceDate
+    time = dicom_file.SourceSequence[0].SourceStrengthReferenceTime
+    date_time = date + time
+    return datetime.datetime.strptime(date_time, "%Y%m%d%H%M%S")
+
+
+def get_study_date_and_time(dicom_file):
+    date = dicom_file.StudyDate
+    time = dicom_file.StudyTime
+    date_time = date + time
+    if not time:
+        return datetime.datetime.strptime(date_time, "%Y%m%d")
+    else:
+        return datetime.datetime.strptime(date_time, "%Y%m%d%H%M%S")
+
+
+def get_total_treatment_time(dicom_file):
+    # in seconds
+    rakr = get_rakr(dicom_file)
+    total_referance_air_kerma = float(dicom_file.SourceSequence[0].ApplicationSetupSequence[0].TotalReferenceAirKerma)
+    return total_referance_air_kerma / rakr * 3600
+
