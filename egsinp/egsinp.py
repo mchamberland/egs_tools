@@ -510,3 +510,28 @@ class EGSinp:
 
     def open(self):
         self.input_file = open(self.filename + '.egsinp', 'a')
+
+    @staticmethod
+    def create_seed_transformations_file(seed_locations, filename="seed_locations", convert_to_cm=True,
+                                         place_in_egs_brachy_lib=True):
+        if convert_to_cm:
+            seed_locations = seed_locations / 10
+
+        if place_in_egs_brachy_lib:
+            lib_path = "egs_brachy/lib/geometry/transformations/"
+            root = os.path.expandvars("$EGS_HOME")
+            the_path = os.path.join(root, lib_path)
+        else:
+            the_path = ""
+
+        full_path = os.path.join(the_path, filename + ".transf")
+
+        with open(full_path, 'w') as file:
+            start_str = ":start transformation:\n"
+            stop_str = ":stop transformation:\n\n"
+            translation_root = "\ttranslation = "
+
+            for location in seed_locations:
+                seed_location = ', '.join(map(str, location))
+                translation_str = translation_root + seed_location + "\n"
+                file.write(start_str + translation_str + stop_str)
