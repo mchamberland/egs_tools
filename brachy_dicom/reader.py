@@ -5,6 +5,9 @@ import numpy as np
 from typing import Tuple
 import datetime
 
+SOURCE_MODELS = {'I-125 (6711) [TG43 updated]': 'OncoSeed_6711',
+                 'I-125(AgX100)': 'AgX100'}
+
 
 def list_all_files_in_directory(directory='.'):
     return [f for f in listdir(directory) if isfile(join(directory, f))]
@@ -56,7 +59,8 @@ def read_structure_files_in_directory(directory='.'):
     return filenames, dicom_structs
 
 
-def get_dwells(dicom_file) -> Tuple[np.ndarray, np.ndarray, int]:
+def get_all_dwells(dicom_file) -> Tuple[np.ndarray, np.ndarray, int]:
+    # these include dwells that have no source, to use possibly to determine source orientation in 3D
     # positions in mm and times in s
     root = dicom_file.ApplicationSetupSequence[0].ChannelSequence
     number_of_channels = len(root)
@@ -85,6 +89,14 @@ def get_dwells(dicom_file) -> Tuple[np.ndarray, np.ndarray, int]:
                 dwell_times.append(current_time - previous_time)
 
     return np.array(dwell_positions), np.array(dwell_times), number_of_channels
+
+
+def get_dwells(dicom_file) -> Tuple[np.ndarray, np.ndarray, int]:
+    # positions in mm and times in s
+    dwells, times, number_of_channels = get_all_dwells(dicom_file)
+    dwell_times = times[times > 0]
+    dwell_positions = dwells[times > 0]
+    return dwell_positions, dwell_times, number_of_channels
 
 
 def get_modality(dicom_file):
@@ -129,6 +141,24 @@ def get_study_date_and_time(dicom_file):
 def get_total_treatment_time(dicom_file):
     # in seconds
     rakr = get_rakr(dicom_file)
-    total_referance_air_kerma = float(dicom_file.SourceSequence[0].ApplicationSetupSequence[0].TotalReferenceAirKerma)
-    return total_referance_air_kerma / rakr * 3600
+    total_reference_air_kerma = float(dicom_file.SourceSequence[0].ApplicationSetupSequence[0].TotalReferenceAirKerma)
+    return total_reference_air_kerma / rakr * 3600
 
+
+def get_source_model(dicom_file):
+    return SOURCE_MODELS[dicom_file.SourceSequence[0].SourceIsotopeName]
+
+
+def get_number_of_seeds(dicom_file):
+    return len(dicom_file.ApplicationSetupSequence)
+
+
+def get_seed_locations(dicom_file) -> np.ndarray:
+    # positions in mm
+    seed_positions = []
+
+    for seed in dicom_file.ApplicationSetupSequence:
+        pos = [float(x) for x in seed.ChannelSequence[0].BrachyControlPointSequence[0].ControlPoint3DPosition]
+        seed_positions.append(pos)
+
+    return np.array(seed_positions)

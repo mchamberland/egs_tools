@@ -23,6 +23,7 @@ class EGSinp:
     """
 
     SOURCE_RADIONUCLIDE = {'OncoSeed_6711': 'I125_LDR',
+                           'AgX100': 'I125_LDR',
                            'TheraSeed_200': 'Pd103_LDR',
                            'microSelectron-v2': 'Ir192_HDR',
                            'GammaMedPlus': 'Ir192_HDR'}
@@ -37,6 +38,7 @@ class EGSinp:
 
     # in units of Gy cm^2 hist^-1
     SOURCE_AIR_KERMA_STRENGTH_PER_HISTORY = {'OncoSeed_6711': 3.7651E-14,
+                                             'AgX100': 3.9468E-14,
                                              'TheraSeed_200': 6.4255E-14,
                                              'microSelectron-v2': 1.1517E-13,
                                              'GammaMedPlus': 1.1592E-13}
