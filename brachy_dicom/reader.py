@@ -35,24 +35,24 @@ def list_ct_files_in_directory(directory='.'):
     return [f for f in dicom_files if pydicom.read_file(join(directory, f)).Modality == 'CT']
 
 
-def read_plan_files_in_directory():
-    files = list_plan_files_in_directory()
+def read_plan_files_in_directory(directory='.'):
+    files = list_plan_files_in_directory(directory)
     filenames = [splitext(file)[0] for file in files]
-    dicom_plans = [pydicom.read_file(file) for file in files]
+    dicom_plans = [pydicom.read_file(join(directory, file)) for file in files]
     return filenames, dicom_plans
 
 
-def read_dose_files_in_directory():
-    files = list_dose_files_in_directory()
+def read_dose_files_in_directory(directory='.'):
+    files = list_dose_files_in_directory(directory)
     filenames = [splitext(file)[0] for file in files]
-    dicom_doses = [pydicom.read_file(file) for file in files]
+    dicom_doses = [pydicom.read_file(join(directory, file)) for file in files]
     return filenames, dicom_doses
 
 
-def read_structure_files_in_directory():
-    files = list_structure_files_in_directory()
+def read_structure_files_in_directory(directory='.'):
+    files = list_structure_files_in_directory(directory)
     filenames = [splitext(file)[0] for file in files]
-    dicom_structs = [pydicom.read_file(file) for file in files]
+    dicom_structs = [pydicom.read_file(join(directory, file)) for file in files]
     return filenames, dicom_structs
 
 
