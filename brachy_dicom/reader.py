@@ -46,12 +46,13 @@ def read_ct_files_in_directory(directory='.'):
 
 
 def get_sorted_ct_files_in_directory(directory='.'):
-    # returns a list of tuples (z-slice in mm, CT filename, Pydicom dataset), sorted by z-slice
+    # sorted by z-slice
     filenames, ct_files = read_ct_files_in_directory(directory)
     zslices = [float(ct.ImagePositionPatient[2]) for ct in ct_files]
     temp = list(zip(zslices, filenames, ct_files))
     temp.sort()
-    return temp
+    zslices, filenames, ct_files = zip(*temp)
+    return filenames, ct_files
 
 
 def read_plan_files_in_directory(directory='.'):
