@@ -11,6 +11,16 @@ import numpy as np
 from typing import List
 
 
+def get_list_of_ctframes(ct_files):
+    ctframes = []
+    print('Assembling list of CT frames...')
+    for (i, file) in enumerate(ct_files):
+        print('Frame {0:d} out of {1:d}...'.format(i+1, len(ct_files)))
+        ctframes.append(CTframe(file))
+    print('Done!\n')
+    return ctframes
+
+
 class CTframe:
     def __init__(self, ct_file):
         self.number_of_rows = ct_file.Rows
