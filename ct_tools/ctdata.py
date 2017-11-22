@@ -7,11 +7,15 @@ class:
 CTframe -- holds a single x-y CT slice, in raw pixel numbers
 CTdata -- a CTdata object
 """
+import os
+import gzip
 import numpy as np
 from typing import List
 
 
 class CTframe:
+    # note that the axes of the DICOM pixel array are switched when read because the DICOM array is in the order [y][x]
+    # instead of [x][y]
     def __init__(self, ct_file):
         self.number_of_rows = ct_file.Rows
         self.number_of_columns = ct_file.Columns
@@ -24,11 +28,16 @@ class CTframe:
 
 
 class CTdata:
-    def __init__(self, ctframes: List[CTframe]):
-        self.dimensions = [ctframes[0].number_of_columns, ctframes[0].number_of_rows, len(ctframes)]
-        self.bounds = self.get_bounds(ctframes)
-        self.image = np.array([])
-        self.get_ct_data(ctframes)
+    def __init__(self, ctframes: List[CTframe]=None):
+        if ctframes:
+            self.dimensions = [ctframes[0].number_of_columns, ctframes[0].number_of_rows, len(ctframes)]
+            self.bounds = self.get_bounds(ctframes)
+            self.image = np.array([])
+            self.get_ct_data(ctframes)
+        else:
+            self.dimensions = []
+            self.bounds = [[], [], []]
+            self.image = np.array([])
 
     @staticmethod
     def get_bounds(ctframes: List[CTframe]) -> List[List[float]]:
@@ -76,31 +85,57 @@ class CTdata:
         return dx, dy, dz
 
     def write_to_file(self, filename="image.ctdata"):
-        with open(filename, 'wt') as ctdata:
-            ctdata.write('{}\n'.format(self.number_of_media))
-            for m in self.media:
-                ctdata.write(m + '\n')
+        if filename.endswith('gz'):
+            file = gzip.open(filename, 'wt')
+        else:
+            file = open(filename, 'wt')
 
-            dummy = ''
-            for i in range(0, self.number_of_media):
-                dummy += '{}\t'.format(0.25)
-            dummy += '\n'
-            ctdata.write(dummy)
+        file.write('\t'.join(str(n) for n in self.dimensions) + '\n')
+        file.write('\n'.join(' '.join(str(b) for b in d) for d in self.bounds))
 
-            ctdata.write('\t'.join(str(n) for n in self.dimensions) + '\n')
+        image_str = '\n'
+        for k in range(0, self.dimensions[2]):
+            for j in range(0, self.dimensions[1]):
+                line = ''
+                for i in range(0, self.dimensions[0]):
+                    line += str(self.image[(i, j, k)]) + ' '
+                image_str += line + '\n'
+            image_str += '\n'
+        file.write(image_str)
+        file.close()
 
-            ctdata.write('\n'.join(' '.join(str(b) for b in d) for d in self.bounds))
 
-            phantom_str = '\n'
-            for k in range(0, self.dimensions[2]):
-                for j in range(0, self.dimensions[1]):
-                    line = ''
-                    for i in range(0, self.dimensions[0]):
-                        line += self.ctdata[(i, j, k)]
-                    phantom_str += line + '\n'
-                phantom_str += '\n'
-            ctdata.write(phantom_str)
+def read_ctdata(filename):
+    if not os.path.exists(filename):
+        return -1
 
+    if filename.endswith('gz'):
+        with gzip.open(filename, 'r') as file:
+            lines = file.readlines()
+            lines = [line.strip() for line in lines if line.strip()]
+    else:
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+            lines = [line.strip() for line in lines if line.strip()]
+
+    ctdata = CTdata()
+    ctdata.dimensions = list(map(int, lines[0].split()))
+    del lines[0]
+
+    idx = 0
+    for i in range(3):
+        while len(ctdata.bounds[i]) < ctdata.dimensions[i] + 1:
+            tmp = [float(bound) for bound in lines[idx].split()]
+            ctdata.bounds[i].extend(tmp)
+            idx += 1
+    del lines[0:idx]
+
+    phantom = [float(values) for row in lines for values in row.split()]
+    ctdata.image = np.array(phantom)
+    ctdata.image = ctdata.image.reshape(ctdata.dimensions, order='F')
+
+    del lines
+    return ctdata
 
 
 def get_list_of_ctframes(ct_files) -> List[CTframe]:
