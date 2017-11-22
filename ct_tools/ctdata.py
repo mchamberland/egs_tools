@@ -8,17 +8,7 @@ CTframe -- holds a single x-y CT slice, in raw pixel numbers
 CTdata -- a CTdata object
 """
 import numpy as np
-from typing import List, Tuple
-
-
-def get_list_of_ctframes(ct_files):
-    ctframes = []
-    print('Assembling list of CT frames...')
-    for (i, file) in enumerate(ct_files):
-        print('Frame {0:d} out of {1:d}...'.format(i+1, len(ct_files)))
-        ctframes.append(CTframe(file))
-    print('Done!\n')
-    return ctframes
+from typing import List
 
 
 class CTframe:
@@ -41,7 +31,7 @@ class CTdata:
         self.get_ct_data(ctframes)
 
     @staticmethod
-    def get_bounds(ctframes: List[CTframe]):
+    def get_bounds(ctframes: List[CTframe]) -> List[List[float]]:
         xbounds = []
         ybounds = []
         zbounds = []
@@ -79,8 +69,45 @@ class CTdata:
             nvox *= dims
         return nvox
 
-    def voxel_size_in_cm(self):
+    def voxel_size_in_cm(self) -> (float, float, float):
         dx = self.bounds[0][1] - self.bounds[0][0]
         dy = self.bounds[1][1] - self.bounds[1][0]
         dz = self.bounds[2][1] - self.bounds[2][0]
         return dx, dy, dz
+
+    def write_to_file(self, filename="image.ctdata"):
+        with open(filename, 'wt') as ctdata:
+            ctdata.write('{}\n'.format(self.number_of_media))
+            for m in self.media:
+                ctdata.write(m + '\n')
+
+            dummy = ''
+            for i in range(0, self.number_of_media):
+                dummy += '{}\t'.format(0.25)
+            dummy += '\n'
+            ctdata.write(dummy)
+
+            ctdata.write('\t'.join(str(n) for n in self.dimensions) + '\n')
+
+            ctdata.write('\n'.join(' '.join(str(b) for b in d) for d in self.bounds))
+
+            phantom_str = '\n'
+            for k in range(0, self.dimensions[2]):
+                for j in range(0, self.dimensions[1]):
+                    line = ''
+                    for i in range(0, self.dimensions[0]):
+                        line += self.ctdata[(i, j, k)]
+                    phantom_str += line + '\n'
+                phantom_str += '\n'
+            ctdata.write(phantom_str)
+
+
+
+def get_list_of_ctframes(ct_files) -> List[CTframe]:
+    ctframes = []
+    print('Assembling list of CT frames...')
+    for (i, file) in enumerate(ct_files):
+        print('Frame {0:d} out of {1:d}...'.format(i+1, len(ct_files)))
+        ctframes.append(CTframe(file))
+    print('Done!\n')
+    return ctframes
