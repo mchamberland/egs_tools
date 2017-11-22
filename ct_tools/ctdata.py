@@ -8,7 +8,7 @@ CTframe -- holds a single x-y CT slice, in raw pixel numbers
 CTdata -- a CTdata object
 """
 import numpy as np
-from typing import List
+from typing import List, Tuple
 
 
 def get_list_of_ctframes(ct_files):
@@ -78,3 +78,9 @@ class CTdata:
         for dims in self.dimensions:
             nvox *= dims
         return nvox
+
+    def voxel_size_in_cm(self):
+        dx = self.bounds[0][1] - self.bounds[0][0]
+        dy = self.bounds[1][1] - self.bounds[1][0]
+        dz = self.bounds[2][1] - self.bounds[2][0]
+        return dx, dy, dz
