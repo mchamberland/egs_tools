@@ -4,19 +4,30 @@ from ct_tools.ctdata import CTdata
 
 
 def resample_ctdata(ct: CTdata, voxel_size_in_cm: Tuple[float, float, float]) -> CTdata:
-    resampled = CTdata()
+    print("Resampling CT data...")
+    print("Requested voxel size in cm: ({:.2f}, {:.2f}, {:.2f})".format(voxel_size_in_cm[0],
+                                                                        voxel_size_in_cm[1],
+                                                                        voxel_size_in_cm[2]))
 
     check_requested_voxel_size(ct.image_size_in_cm(), voxel_size_in_cm)
-
     dimensions, adjusted_voxel_size = adjust_requested_voxel_size(ct.image_size_in_cm(), voxel_size_in_cm)
-
     bounds = calculate_new_bounds(ct.bounds, adjusted_voxel_size, dimensions)
 
-    ct_voxel_size = ct.voxel_size_in_cm()
-    for (ct_ijk, value) in np.ndenumerate(ct.image):
-        lower_ijk, upper_ijk = find_indices_of_resampled_voxels_where_boundaries_of_ct_voxel_lie(ct.bounds, bounds,
-                                                                                                 ct_ijk)
+    resampled = CTdata()
+    resampled.dimensions = dimensions
+    resampled.bounds = bounds
+    resampled.image = np.zeros(dimensions)
 
+    for (ct_ijk, value) in np.ndenumerate(ct.image):
+        lower_ijk, upper_ijk = find_ijk_where_ct_boundaries_lie(ct.bounds, bounds, ct_ijk)
+        indices = list(zip(lower_ijk, upper_ijk))
+        weights = calculate_weights_of_ct_voxel(ct.bounds, bounds, ct_ijk, indices, ct.voxel_size_in_cm(),
+                                                adjusted_voxel_size)
+
+        for i in range(lower_ijk[0], upper_ijk[0] + 1):
+            for j in range(lower_ijk[1], upper_ijk[1] + 1):
+                for k in range(lower_ijk[2], upper_ijk[2] + 1):
+                    resampled.image[(i, j, k)] += ct.image[ct_ijk] * weights[0][i] * weights[1][j] * weights[2][k]
 
     return resampled
 
@@ -45,20 +56,41 @@ def adjust_requested_voxel_size(ct_image_size, voxel_size):
 
 
 def calculate_new_bounds(ct_bounds, voxel_size, dimensions):
+    print("Calculating new bounds...")
     return [[ct_bounds[i][0] + j * voxel_size[i] for j in range(dimensions[i] + 1)] for i in range(3)]
 
 
-def find_indices_of_resampled_voxels_where_boundaries_of_ct_voxel_lie(ct_bounds, bounds, ct_ijk):
+def find_ijk_where_ct_boundaries_lie(ct_bounds, bounds, ct_ijk):
     ct_lower_bounds = [ct_bounds[i][v] for (i, v) in enumerate(ct_ijk)]
     ct_upper_bounds = [ct_bounds[i][v + 1] for (i, v) in enumerate(ct_ijk)]
 
-    lower_indices = np.array([np.searchsorted(bounds[i], ct_lower_bounds[i]) - 1 for i in range(3)])
-    lower_indices[lower_indices < 0] = 0
+    lower_ijk = np.array([np.searchsorted(bounds[i], ct_lower_bounds[i]) - 1 for i in range(3)])
+    lower_ijk[lower_ijk < 0] = 0
 
-    upper_indices = np.array([np.searchsorted(bounds[i], ct_upper_bounds[i]) - 1 for i in range(3)])
-    upper_indices[upper_indices < 0] = 0
+    upper_ijk = np.array([np.searchsorted(bounds[i], ct_upper_bounds[i]) - 1 for i in range(3)])
+    upper_ijk[upper_ijk < 0] = 0
 
-    return lower_indices, upper_indices
+    return lower_ijk, upper_ijk
 
 
-def calculate_weights_of_ct_voxel(voxel_ijk)
+def calculate_weights_of_ct_voxel(ct_bounds, bounds, ct_ijk, indices, ct_voxel_size, voxel_size):
+    weights = np.array([np.zeros(len(ct_bounds[0])), np.zeros(len(ct_bounds[1])), np.zeros(len(ct_bounds[2]))])
+
+    for (dimension, index) in enumerate(indices):
+        if index[0] == index[1]:  # ct low and hi bounds are in same xyz voxel
+            weights[dimension][index[0]] = ct_voxel_size[dimension] / voxel_size[dimension]
+        else:
+            for i in range(index[0], index[1] + 1):
+                if bounds[dimension][i] >= ct_bounds[dimension][ct_ijk[dimension]] and bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
+                    # xyz voxel is entirely in ct voxel
+                    weights[dimension][i] = 1.0
+
+                elif bounds[dimension][i] <= ct_bounds[dimension][ct_ijk[dimension]] and bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
+                    # ct voxel straddles the upper bound of the xyz voxel
+                    weights[dimension][i] = (bounds[dimension][i + 1] - ct_bounds[dimension][ct_ijk[dimension]]) / voxel_size[dimension]
+
+                else:
+                    # ct voxel straddles the lower bound of the xyz voxel
+                    weights[dimension][i] = (ct_bounds[dimension][ct_ijk[dimension] + 1] - bounds[dimension][i]) / voxel_size[dimension]
+
+    return weights
