@@ -9,8 +9,9 @@ CTdata -- a CTdata object
 """
 import os
 import gzip
+import voxelnav
 import numpy as np
-from typing import List
+from typing import List, Tuple
 
 
 class CTframe:
@@ -35,7 +36,7 @@ class CTdata:
             self.image = np.array([])
             self.get_ct_data(ctframes)
         else:
-            self.dimensions = []
+            self.dimensions = [0, 0, 0]
             self.bounds = [[], [], []]
             self.image = np.array([])
 
@@ -84,6 +85,16 @@ class CTdata:
         dz = self.bounds[2][1] - self.bounds[2][0]
         return dx, dy, dz
 
+    def image_size_in_cm(self) -> (float, float, float):
+        dx = self.bounds[0][-1] - self.bounds[0][0]
+        dy = self.bounds[1][-1] - self.bounds[1][0]
+        dz = self.bounds[2][-1] - self.bounds[2][0]
+        return dx, dy, dz
+
+    def get_ct_number_from_xyz(self, pos: Tuple[float, float, float]) -> float:
+        index = voxelnav.get_ijk_from_xyz(pos, self.bounds)
+        return self.image[index]
+
     def write_to_file(self, filename="image.ctdata"):
         if filename.endswith('gz'):
             file = gzip.open(filename, 'wt')
@@ -103,6 +114,62 @@ class CTdata:
             image_str += '\n'
         file.write(image_str)
         file.close()
+
+
+def crop_ctdata_to_bounds(original: CTdata, the_bounds, include_partial_voxel=False) -> CTdata:
+    if len(the_bounds) > 1:
+        xi, xf, yi, yf, zi, zf = the_bounds
+    else:
+        xi = yi = zi = (-1) * the_bounds[0] / 2.
+        xf = yf = zf = the_bounds[0] / 2.
+
+    x_index = voxelnav.get_region_indices_from_low_and_hi_pos(xi, xf, original.bounds[0], include_partial_voxel)
+    y_index = voxelnav.get_region_indices_from_low_and_hi_pos(yi, yf, original.bounds[1], include_partial_voxel)
+    z_index = voxelnav.get_region_indices_from_low_and_hi_pos(zi, zf, original.bounds[2], include_partial_voxel)
+
+    xb_slice = slice(x_index[0], x_index[1] + 2)
+    yb_slice = slice(y_index[0], y_index[1] + 2)
+    zb_slice = slice(z_index[0], z_index[1] + 2)
+
+    cropped = CTdata()
+
+    cropped.bounds[0] = original.bounds[0][xb_slice]
+    cropped.bounds[1] = original.bounds[1][yb_slice]
+    cropped.bounds[2] = original.bounds[2][zb_slice]
+
+    x_slice = slice(x_index[0], x_index[1] + 1)
+    y_slice = slice(y_index[0], y_index[1] + 1)
+    z_slice = slice(z_index[0], z_index[1] + 1)
+
+    cropped.image = original.image[x_slice, y_slice, z_slice]
+
+    cropped.dimensions[0] = len(cropped.bounds[0]) - 1
+    cropped.dimensions[1] = len(cropped.bounds[1]) - 1
+    cropped.dimensions[2] = len(cropped.bounds[2]) - 1
+
+    return cropped
+
+
+def crop_ctdata_to_slice_indices(original: CTdata, slice1: int, slice2: int) -> CTdata:
+    cropped = CTdata()
+    if slice1 > slice2:
+        tmp = slice1
+        slice1 = slice2
+        slice2 = tmp
+
+    zb_slice = slice(slice1, slice2 + 2)
+    cropped.bounds[0] = original.bounds[0]
+    cropped.bounds[1] = original.bounds[1]
+    cropped.bounds[2] = original.bounds[2][zb_slice]
+
+    z_slice = slice(slice1, slice2 + 1)
+    cropped.image = original.image[:, :, z_slice]
+
+    cropped.dimensions[0] = original.dimensions[0]
+    cropped.dimensions[1] = original.dimensions[1]
+    cropped.dimensions[2] = len(cropped.bounds[2]) - 1
+
+    return cropped
 
 
 def read_ctdata(filename):
@@ -130,8 +197,8 @@ def read_ctdata(filename):
             idx += 1
     del lines[0:idx]
 
-    phantom = [float(values) for row in lines for values in row.split()]
-    ctdata.image = np.array(phantom)
+    image = [float(values) for row in lines for values in row.split()]
+    ctdata.image = np.array(image)
     ctdata.image = ctdata.image.reshape(ctdata.dimensions, order='F')
 
     del lines
