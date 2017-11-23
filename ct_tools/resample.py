@@ -18,6 +18,7 @@ def resample_ctdata(ct: CTdata, voxel_size_in_cm: Tuple[float, float, float]) ->
     resampled.bounds = bounds
     resampled.image = np.zeros(dimensions)
 
+    print("Calculating weights and new CT values...")
     for (ct_ijk, value) in np.ndenumerate(ct.image):
         lower_ijk, upper_ijk = find_ijk_where_ct_boundaries_lie(ct.bounds, bounds, ct_ijk)
         indices = list(zip(lower_ijk, upper_ijk))
@@ -29,6 +30,7 @@ def resample_ctdata(ct: CTdata, voxel_size_in_cm: Tuple[float, float, float]) ->
                 for k in range(lower_ijk[2], upper_ijk[2] + 1):
                     resampled.image[(i, j, k)] += ct.image[ct_ijk] * weights[0][i] * weights[1][j] * weights[2][k]
 
+    print("Resampling completed!")
     return resampled
 
 
@@ -74,7 +76,11 @@ def find_ijk_where_ct_boundaries_lie(ct_bounds, bounds, ct_ijk):
 
 
 def calculate_weights_of_ct_voxel(ct_bounds, bounds, ct_ijk, indices, ct_voxel_size, voxel_size):
-    weights = np.array([np.zeros(len(ct_bounds[0])), np.zeros(len(ct_bounds[1])), np.zeros(len(ct_bounds[2]))])
+    max_xindex = max(len(ct_bounds[0]), len(bounds[0]))
+    max_yindex = max(len(ct_bounds[1]), len(bounds[1]))
+    max_zindex = max(len(ct_bounds[2]), len(bounds[2]))
+
+    weights = np.array([np.zeros(max_xindex), np.zeros(max_yindex), np.zeros(max_zindex)])
 
     for (dimension, index) in enumerate(indices):
         if index[0] == index[1]:  # ct low and hi bounds are in same xyz voxel
