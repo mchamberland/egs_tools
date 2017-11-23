@@ -4,6 +4,9 @@ from ct_tools.ctdata import CTdata
 
 
 def resample_ctdata(ct: CTdata, voxel_size_in_cm: Tuple[float, float, float]) -> CTdata:
+    # based on the the resampleCT subroutine in ctcreate.mortran in EGSnrc
+    # resampling weighs the original CT values by the fractional volume of each resampled (xyz) voxel that overlaps
+    # with a given CT voxel
     print("Resampling CT data...")
     print("Requested voxel size in cm: ({:.2f}, {:.2f}, {:.2f})".format(voxel_size_in_cm[0],
                                                                         voxel_size_in_cm[1],
@@ -19,7 +22,13 @@ def resample_ctdata(ct: CTdata, voxel_size_in_cm: Tuple[float, float, float]) ->
     resampled.image = np.zeros(dimensions)
 
     print("Calculating weights and new CT values...")
+    loop_counter = 0
+    print_counter = 1
     for (ct_ijk, value) in np.ndenumerate(ct.image):
+        loop_counter += 1
+        if loop_counter % int(ct.nvox() / 10) == 0:
+            print("{:d}%...".format(print_counter * 10))
+            print_counter += 1
         lower_ijk, upper_ijk = find_ijk_where_ct_boundaries_lie(ct.bounds, bounds, ct_ijk)
         indices = list(zip(lower_ijk, upper_ijk))
         weights = calculate_weights_of_ct_voxel(ct.bounds, bounds, ct_ijk, indices, ct.voxel_size_in_cm(),
@@ -48,7 +57,7 @@ def adjust_requested_voxel_size(ct_image_size, voxel_size):
     adjusted_voxel_size = [float(ct_image_size[i] / n) for (i, n) in enumerate(dimensions)]
 
     print("Adjusted dimensions (in cm) so that an integer number of voxels fit exactly on the CT data:")
-    print("New voxel size in cm: ({:.2f}, {:.2f}, {:.2f})".format(adjusted_voxel_size[0],
+    print("New voxel size in cm: ({:.4f}, {:.4f}, {:.4f})".format(adjusted_voxel_size[0],
                                                                   adjusted_voxel_size[1],
                                                                   adjusted_voxel_size[2]))
     print("New number of voxels: ({:d}, {:d}, {:d})".format(dimensions[0],
@@ -83,7 +92,8 @@ def calculate_weights_of_ct_voxel(ct_bounds, bounds, ct_ijk, indices, ct_voxel_s
     weights = np.array([np.zeros(max_xindex), np.zeros(max_yindex), np.zeros(max_zindex)])
 
     for (dimension, index) in enumerate(indices):
-        if index[0] == index[1]:  # ct low and hi bounds are in same xyz voxel
+        if index[0] == index[1]:
+            # ct low and hi bounds are in same xyz voxel
             weights[dimension][index[0]] = ct_voxel_size[dimension] / voxel_size[dimension]
         else:
             for i in range(index[0], index[1] + 1):
