@@ -11,6 +11,7 @@ import os
 import gzip
 import voxelnav
 import numpy as np
+import brachy_dicom.reader as bdr
 from typing import List, Tuple
 
 
@@ -213,3 +214,9 @@ def get_list_of_ctframes(ct_files) -> List[CTframe]:
         ctframes.append(CTframe(file))
     print('Done!\n')
     return ctframes
+
+
+def get_ctdata_from_dicom(directory='.') -> CTdata:
+    ct_names, ct_files = bdr.get_sorted_ct_files_in_directory(directory)
+    ct_frames = get_list_of_ctframes(ct_files)
+    return CTdata(ct_frames)
