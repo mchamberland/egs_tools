@@ -1,5 +1,4 @@
 import numpy as np
-import ct_tools.ctdata as ctt
 from ct_tools.ctdata import CTdata
 
 
