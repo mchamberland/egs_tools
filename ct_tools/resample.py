@@ -103,16 +103,20 @@ def calculate_weights_of_ct_voxel(ct_bounds, bounds, ct_ijk, indices, ct_voxel_s
             weights[dimension][index[0]] = ct_voxel_size[dimension] / voxel_size[dimension]
         else:
             for i in range(index[0], index[1] + 1):
-                if bounds[dimension][i] >= ct_bounds[dimension][ct_ijk[dimension]] and bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
+                if bounds[dimension][i] >= ct_bounds[dimension][ct_ijk[dimension]] and \
+                                bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
                     # xyz voxel is entirely in ct voxel
                     weights[dimension][i] = 1.0
 
-                elif bounds[dimension][i] <= ct_bounds[dimension][ct_ijk[dimension]] and bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
+                elif bounds[dimension][i] <= ct_bounds[dimension][ct_ijk[dimension]] and \
+                                bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
                     # ct voxel straddles the upper bound of the xyz voxel
-                    weights[dimension][i] = (bounds[dimension][i + 1] - ct_bounds[dimension][ct_ijk[dimension]]) / voxel_size[dimension]
+                    weights[dimension][i] = (bounds[dimension][i + 1] - ct_bounds[dimension][ct_ijk[dimension]]) / \
+                                            voxel_size[dimension]
 
                 else:
                     # ct voxel straddles the lower bound of the xyz voxel
-                    weights[dimension][i] = (ct_bounds[dimension][ct_ijk[dimension] + 1] - bounds[dimension][i]) / voxel_size[dimension]
+                    weights[dimension][i] = (ct_bounds[dimension][ct_ijk[dimension] + 1] - bounds[dimension][i]) / \
+                                            voxel_size[dimension]
 
     return weights
