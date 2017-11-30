@@ -206,13 +206,16 @@ def read_ctdata(filename):
     return ctdata
 
 
-def get_list_of_ctframes(ct_files) -> List[CTframe]:
+def get_list_of_ctframes(ct_files, verbose=False) -> List[CTframe]:
     ctframes = []
-    print('Assembling list of CT frames...')
+    if verbose:
+        print('Assembling list of CT frames...')
     for (i, file) in enumerate(ct_files):
-        print('Frame {0:d} out of {1:d}...'.format(i+1, len(ct_files)))
+        if verbose:
+            print('Frame {0:d} out of {1:d}...'.format(i+1, len(ct_files)))
         ctframes.append(CTframe(file))
-    print('Done!\n')
+    if verbose:
+        print('Done!\n')
     return ctframes
 
 

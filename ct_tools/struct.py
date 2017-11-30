@@ -43,7 +43,7 @@ class Contour:
         self.number = number
         self.colour = colour
         self.zslices = zslices  # the z-slices corresponding to the contour_data, in cm
-        self.contour_data = contour_data  # 2-D contour data stored as (x,y) tuples, in cm
+        self.contour_data = contour_data  # 2-D contour data for each zslice stored as a list of (x,y) tuples, in cm
         self.missing_slices = None
         self.is_interpolated = False
 
