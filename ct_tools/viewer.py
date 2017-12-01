@@ -1,14 +1,14 @@
 import matplotlib.pyplot as plt
 
 
-def multi_slice_viewer(volume, reorder_axes=True):
+def multi_slice_viewer(volume, reorder_axes=True, cmap=None):
     if reorder_axes:
         volume = volume.transpose((2, 1, 0))
     remove_keymap_conflicts({'j', 'k'})
     fig, ax = plt.subplots()
     ax.volume = volume
     ax.index = volume.shape[0] // 2
-    ax.imshow(volume[ax.index])
+    ax.imshow(volume[ax.index], cmap)
     fig.canvas.mpl_connect('key_press_event', process_key)
     plt.show()
 
