@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
 
 
-def multi_slice_viewer(volume):
+def multi_slice_viewer(volume, reorder_axes=True):
+    if reorder_axes:
+        volume = volume.transpose((2, 1, 0))
     remove_keymap_conflicts({'j', 'k'})
     fig, ax = plt.subplots()
     ax.volume = volume
