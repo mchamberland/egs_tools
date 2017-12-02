@@ -1,7 +1,11 @@
 import numpy as np
+import voxelnav
+from typing import List
 from scipy.spatial import cKDTree
 from matplotlib.path import Path
 import brachy_dicom.reader as bdr
+
+ROI_dict = {}
 
 
 def get_contours_from_dicom(directory='.'):
@@ -10,42 +14,60 @@ def get_contours_from_dicom(directory='.'):
         raise Exception("There are more than 1 RT Structure files in the directory."
                         "Please select a directory with a single RT Structure file")
     struct = rt_structs[0]
-    contour_list = []
+    contour_dict = {}
+    for ROI in struct.StructureSetROISequence:
+        label = ROI.ROIName
+        number = ROI.ROINumber
+        ROI_dict[label] = number
+        contour_dict[number] = Contour(number=number, name=label)
+
     for ROI in struct.RTROIObservationsSequence:
-        if ROI.RTROIInterpretedType == "BRACHY_CHANNEL":
-            continue  # don't know what to do with those yet...
-
-        label = ROI.ROIObservationLabel
         number = ROI.ReferencedROINumber
-        colour = [float(v) for v in struct.ROIContourSequence[number].ROIDisplayColor]
-        temp_data = []
-        for zslice in struct.ROIContourSequence[number].ContourSequence:
-            points_as_float_in_cm = [float(v) / 10 for v in zslice.ContourData]
-            it = iter(points_as_float_in_cm)
-            temp_data.append(list(zip(it, it, it)))
+        if number in contour_dict:
+            contour_dict[number].type = ROI.RTROIInterpretedType
 
-        temp_data.sort(key=lambda temp: temp[0][2])  # sort by z-slice
-        zslices = []
-        contour_data = []
-        for zslice in temp_data:
-            x, y, z = list(zip(*zslice))
-            contour_data.append(list(zip(x, y)))
-            zslices.append(z[0])
+    for ROI in struct.ROIContourSequence:
+        number = ROI.ReferencedROINumber
 
-        contour_list.append(Contour(contour_data, np.array(zslices), label, number, colour))
+        if number in contour_dict:
+            if 'ROIDisplayColor' in ROI:
+                contour_dict[number].colour = [float(v) for v in ROI.ROIDisplayColor]
 
-    return contour_list
+            temp_data = []
+            for zslice in ROI.ContourSequence:
+                points_as_float_in_cm = [float(v) / 10 for v in zslice.ContourData]
+                it = iter(points_as_float_in_cm)
+                temp_data.append(list(zip(it, it, it)))
+
+            temp_data.sort(key=lambda temp: temp[0][2])  # sort by z-slice
+            zslices = []
+            contour_data = []
+            for zslice in temp_data:
+                x, y, z = list(zip(*zslice))
+                contour_data.append(list(zip(x, y)))
+                zslices.append(z[0])
+            contour_dict[number].zslices = zslices
+            contour_dict[number].contour_data = contour_data
+
+    contour_dict_by_label = {}
+    for (key, value) in contour_dict.items():
+        contour_dict_by_label[contour_dict[key].name] = contour_dict[key]
+
+    return contour_dict_by_label
 
 
 class Contour:
-    def __init__(self, contour_data, zslices, name='', number=None, colour=(255, 0, 0)):
+    def __init__(self, contour_data=None, zslices=None, name=None, number=None, roitype=None, colour=(255, 0, 0)):
         self.name = name
         self.number = number
+        self.type = roitype
         self.colour = colour
         self.zslices = zslices  # the z-slices corresponding to the contour_data, in cm
         self.contour_data = contour_data  # 2-D contour data for each zslice stored as a list of (x,y) tuples, in cm
         self.missing_slices = None
         self.is_interpolated = False
+        self.pixel_indices = None
+        self.zindices = None
 
     def is_missing_slices(self, slice_thickness):
         slice_differences = np.diff(self.zslices) / slice_thickness
@@ -101,6 +123,20 @@ class Contour:
             self.missing_slices = None
             self.is_interpolated = True
             print("...Sorted!")
+
+    def calculate_voxel_indices_from_contour_data(self, bounds3d: List[List[float]]):
+        zindices = []
+        pixel_indices = []
+        for (index, zslice) in enumerate(self.contour_data):
+            indices = []
+            for (x, y) in zslice:
+                i, j = voxelnav.get_ij_from_xy((x, y), bounds3d[0:2])
+                indices.append((i, j))
+            k = voxelnav.get_index_from_position(self.zslices[index], bounds3d[2])
+            zindices.append(k)
+            pixel_indices.append(indices)
+        self.zindices = zindices
+        self.pixel_indices = pixel_indices
 
 
 class MissingSlices:

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 
 
 def multi_slice_viewer(volume, reorder_axes=True, cmap=None):
+    # in brachyMC, image data are stored as [x][y][z], but pyplot.imshow() expects [z][y][x]
     if reorder_axes:
         volume = volume.transpose((2, 1, 0))
     remove_keymap_conflicts({'j', 'k'})

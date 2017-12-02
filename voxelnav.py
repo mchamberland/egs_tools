@@ -30,6 +30,19 @@ def get_voxel_center_from_ijk(index3d: Tuple[int, int, int], bounds3d: List[List
     return tuple((bounds3d[d][i] + bounds3d[d][i + 1]) / 2. for d, i in enumerate(index3d))
 
 
+def get_pixel_center_from_ij(index2d: Tuple[int, int], bounds2d: List[List[float]]):
+    """Return the coordinates of the center of the pixel specified with its multi-dimensional index
+
+    Args:
+        index2d (Tuple(int)): multi-dimensional index
+        bounds2d (list[list[float]]): list of list of the bounds of each pixel in each dimension
+
+    Returns:
+        (Tuple(float)): coordinates (x,y) of the center of the pixel
+    """
+    return tuple((bounds2d[d][i] + bounds2d[d][i + 1]) / 2. for d, i in enumerate(index2d))
+
+
 def get_voxel_size_from_ijk(index3d: Tuple[int, int, int], bounds3d: List[List[float]]):
     """Return the size of the rectilinear voxel specified by its multi-dimensional index
 
@@ -67,6 +80,19 @@ def get_ijk_from_xyz(pos: Tuple[float, float, float], bounds3d: List[List[float]
         (tuple(int)): multi-dimensional index (i, j, k) of voxel
     """
     return tuple(get_index_from_position(p, bounds3d[i]) for i, p in enumerate(pos))
+
+
+def get_ij_from_xy(pos: Tuple[float, float], bounds2d: List[List[float]]):
+    """Return the (i, j) index of the pixel containing position (x, y)
+
+    Args:
+        pos (tuple(float)): (x, y) position
+        bounds2d (list[list[float]]): list of list of the bounds of each pixel in each dimension
+
+    Returns:
+        (tuple(int)): multi-dimensional index (i, j) of voxel
+    """
+    return tuple(get_index_from_position(p, bounds2d[i]) for i, p in enumerate(pos))
 
 
 def get_ijk_from_index(index: int, dimensions: List[int]):
