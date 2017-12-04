@@ -2,6 +2,7 @@ from scipy.interpolate import interp1d
 
 
 class HU2rho:
+    # TODO add directory parameter and read from it
     def __init__(self, filename):
         self.ct_numbers = []
         self.densities = []
