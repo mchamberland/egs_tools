@@ -243,3 +243,17 @@ class EGSphant:
         """
         voxel_indices = np.where(self.phantom.flatten(order='F') == self.get_medium_key(medium))
         return voxel_indices[0].tolist()
+
+
+class EGSphantFromCT(EGSphant):
+    def __init__(self):
+        EGSphant.__init__(self)
+        self.temp_medium = Medium()
+        self.voxel_assignments = []
+        self.densities = []
+
+
+class Medium:
+    def __init__(self, name=None, density=None):
+        self.name = name
+        self.density = density
