@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from os.path import join, isfile, splitext
+from os.path import join
 
 
 class CTConversionToTissue:
@@ -13,7 +13,9 @@ class CTConversionToTissue:
 
     def read_ctconv_file(self, filename='default'):
         # TODO check CT number limits and that CT numbers are sorted in ascending order
-        path = join(self.directory, filename + '.ctconv')
+        if not filename.endswith('.ctconv'):
+            filename += '.ctconv'
+        path = join(self.directory, filename)
         if not os.path.exists(path):
             return -1
 
@@ -37,6 +39,12 @@ class CTConversionToTissue:
 
     def get_medium_name_from_ctnum(self, ctnum):
         return self.media_list[np.searchsorted(self.ctnum_bins, ctnum) - 1].name
+
+    def get_media_name_list(self):
+        media_name = []
+        for medium in self.media_list:
+            media_name.append(medium.name)
+        return media_name
 
 
 class MediumInfo:

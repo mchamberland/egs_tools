@@ -16,7 +16,7 @@ def get_contours_from_dicom(directory='.'):
     struct = rt_structs[0]
     contour_dict = {}
     for ROI in struct.StructureSetROISequence:
-        label = ROI.ROIName
+        label = ROI.ROIName.replace(' ', '_').lower()
         number = ROI.ROINumber
         ROI_dict[label] = number
         contour_dict[number] = Contour(number=number, name=label)

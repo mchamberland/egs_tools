@@ -3,10 +3,11 @@ from scipy.interpolate import interp1d
 
 class HU2rho:
     # TODO add directory parameter and read from it
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         self.ct_numbers = []
         self.densities = []
-        self.load_hu_to_density_calibration(filename)
+        if filename:
+            self.load_hu_to_density_calibration(filename)
 
     def load_hu_to_density_calibration(self, filename):
         with open(filename, 'r') as file:
