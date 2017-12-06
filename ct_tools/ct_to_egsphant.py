@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import voxelnav
 import egsphant.manip as egsphantmanip
 from os.path import join
 from ct_tools.hu2rho import HU2rho
@@ -15,6 +16,7 @@ class CTConversionToEGSphant:
         self.tissue_converter = {}
         self.density_instruction = {}
         self.media_list = []
+        self.contour_order = []
         self.is_verbose = is_verbose
         if filename:
             self.read_ctscheme_file(filename)
@@ -55,7 +57,7 @@ class CTConversionToEGSphant:
                 self.density_instruction[contour] = density_instruction
                 self.tissue_converter[contour] = CTConversionToTissue(ctconv)
             else:
-                # TODO read .struct file
+                # TODO read .struct file and store order contours are read in contour_order list
                 pass
 
         temp_media_list = []
@@ -92,10 +94,44 @@ class CTConversionToEGSphant:
                 else:
                     egsphant.density[index] = float(self.density_instruction[contour])
         else:
-            # TODO other TAS schemes
-            pass
+            loop_counter = 0
+            print_counter = 10
+            n = int(ctdata.nvox() / 10)
+            for (index, ctnum) in np.ndenumerate(ctdata.image):
+                loop_counter += 1
+                if loop_counter % n == 0:
+                    print("{:d}%...".format(print_counter))
+                    print_counter += 10
 
-        print("Conversion completed!")
+                in_structure = None
+                found_structure = False
+                # TODO instead of iterating over dictionary, iterate over contour_order!
+                for (name, contour) in self.contour_dictionary.items():
+                    if is_voxel_within_max_and_min_bounds_of_contours(index, contour):
+                        x, y, z = voxelnav.get_voxel_center_from_ijk(index, ctdata.bounds)
+                        slice_index = np.searchsorted(contour.zslices, z) - 1
+                        if contour.contour_as_path[slice_index].contains_point((x, y)):
+                            in_structure = name
+                            found_structure = True
+                            break
+
+                if not found_structure:
+                    in_structure = 'REMAINDER'
+
+                medium = self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)
+                medium_key = egsphant.get_medium_key(medium)
+                egsphant.phantom[index] = medium_key
+
+                if self.density_instruction[in_structure] == 'CT':
+                    egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
+                elif self.density_instruction[in_structure] == 'NOMINAL':
+                    medium_index = self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum)
+                    density = self.tissue_converter[in_structure].get_medium_density(medium_index)
+                    egsphant.density[index] = density
+                else:
+                    egsphant.density[index] = float(self.density_instruction[in_structure])
+
+        print("Conversion completed! (Whew!)")
         return egsphant
 
     def setup_egsphant(self, ctdata):

@@ -1,8 +1,6 @@
 import numpy as np
 import voxelnav
 from typing import List
-from operator import itemgetter
-from ct_tools.ctdata import CTdata
 from scipy.spatial import cKDTree
 from matplotlib.path import Path
 import brachy_dicom.reader as bdr
@@ -46,6 +44,7 @@ def get_contours_from_dicom(directory='.'):
             # TODO surely there's a more Pythonic way of doing this...
             zslices = []
             contour_data = []
+            contour_as_path = []
             tmp_max_x = []
             tmp_min_x = []
             tmp_max_y = []
@@ -57,9 +56,11 @@ def get_contours_from_dicom(directory='.'):
                 tmp_max_y.append(max(y))
                 tmp_min_y.append(min(y))
                 contour_data.append(list(zip(x, y)))
+                contour_as_path.append(Path(contour_data))
                 zslices.append(z[0])
             contour_dict[number].zslices = zslices
             contour_dict[number].contour_data = contour_data
+            contour_dict[number].contour_as_path = contour_as_path
 
             max_z = max(zslices)
             min_z = min(zslices)
@@ -85,6 +86,7 @@ class Contour:
         self.colour = colour
         self.zslices = zslices  # the z-slices corresponding to the contour_data, in cm
         self.contour_data = contour_data  # 2-D contour data for each zslice stored as a list of (x,y) tuples, in cm
+        self.contour_as_path = None
         self.max_xyz = None
         self.min_xyz = None
         self.max_indices = None
