@@ -39,6 +39,7 @@ class CTConversionToEGSphant:
         for line in lines[1:]:
             contour, ctconv, density_instruction = line.split()
             contour = os.path.splitext(contour)[0]
+            self.contour_order.append(contour)
             if self.contour_dictionary or contour == 'REMAINDER':
                 if self.is_verbose:
                     print("In structure {}, assign tissues using:".format(contour))
@@ -106,7 +107,8 @@ class CTConversionToEGSphant:
                 in_structure = None
                 found_structure = False
                 # TODO instead of iterating over dictionary, iterate over contour_order!
-                for (name, contour) in self.contour_dictionary.items():
+                for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
+                    contour = self.contour_dictionary[name]
                     if is_voxel_within_max_and_min_bounds_of_contours(index, contour):
                         x, y, z = voxelnav.get_voxel_center_from_ijk(index, ctdata.bounds)
                         slice_index = np.searchsorted(contour.zslices, z) - 1
