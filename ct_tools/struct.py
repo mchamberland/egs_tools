@@ -56,7 +56,7 @@ def get_contours_from_dicom(directory='.'):
                 tmp_max_y.append(max(y))
                 tmp_min_y.append(min(y))
                 contour_data.append(list(zip(x, y)))
-                contour_as_path.append(Path(contour_data))
+                contour_as_path.append(Path(list(zip(x, y))))
                 zslices.append(z[0])
             contour_dict[number].zslices = zslices
             contour_dict[number].contour_data = contour_data

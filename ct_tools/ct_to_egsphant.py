@@ -9,17 +9,17 @@ from ct_tools.ct_to_tissue import CTConversionToTissue
 
 
 class CTConversionToEGSphant:
-    def __init__(self, filename=None, contours=None, directory='.', is_verbose=False):
+    def __init__(self, ctscheme_filename=None, contour_dict=None, directory='.', is_verbose=False):
         self.directory = directory
-        self.contour_dictionary = contours  # instead of reading .struct files, can simply pass contours directly
+        self.contour_dictionary = contour_dict  # instead of reading .struct files, can simply pass contours directly
         self.density_converter = None
         self.tissue_converter = {}
         self.density_instruction = {}
         self.media_list = []
         self.contour_order = []
         self.is_verbose = is_verbose
-        if filename:
-            self.read_ctscheme_file(filename)
+        if ctscheme_filename:
+            self.read_ctscheme_file(ctscheme_filename)
 
     def read_ctscheme_file(self, filename='default'):
         if not filename.endswith('.ctscheme'):
