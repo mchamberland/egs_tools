@@ -103,7 +103,7 @@ class CTdata:
             file = open(filename, 'wt')
 
         file.write('\t'.join(str(n) for n in self.dimensions) + '\n')
-        file.write('\n'.join(' '.join(str(b) for b in d) for d in self.bounds))
+        file.write('\n'.join(' '.join(format(b, '.4f') for b in d) for d in self.bounds))
 
         image_str = '\n'
         for k in range(0, self.dimensions[2]):

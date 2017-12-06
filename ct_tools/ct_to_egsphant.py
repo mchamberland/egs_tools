@@ -69,10 +69,18 @@ class CTConversionToEGSphant:
     def convert_to_egsphant(self, ctdata, extrapolate=False):
         egsphant = self.setup_egsphant(ctdata)
 
+        print("Converting CT data to egsphant. This may take a while...")
         # easy case: no contours, use REMAINDER
-        contour = 'REMAINDER'
         if not self.contour_dictionary:
+            contour = 'REMAINDER'
+            loop_counter = 0
+            print_counter = 1
+            nvox = ctdata.nvox()
             for (index, ctnum) in np.ndenumerate(ctdata.image):
+                loop_counter += 1
+                if loop_counter % int(nvox / 10) == 0:
+                    print("{:d}%...".format(print_counter * 10))
+                    print_counter += 1
                 medium = self.tissue_converter[contour].get_medium_name_from_ctnum(ctnum)
                 medium_key = egsphant.get_medium_key(medium)
                 egsphant.phantom[index] = medium_key
@@ -85,12 +93,18 @@ class CTConversionToEGSphant:
                     egsphant.density[index] = density
                 else:
                     egsphant.density[index] = float(self.density_instruction[contour])
+        else:
+            # TODO other TAS schemes
+            pass
+
+        print("Conversion completed!")
+        return egsphant
 
     def setup_egsphant(self, ctdata):
         egsphant = EGSphantFromCT()
         egsphant.bounds = ctdata.bounds
         egsphant.dimensions = ctdata.dimensions
-        egsphant.phantom = np.zeros(ctdata.dimensions, order='F')
+        egsphant.phantom = np.empty(ctdata.dimensions, dtype=str, order='F')
         egsphant.density = np.zeros(ctdata.dimensions, order='F')
         for medium in self.media_list:
             egsphantmanip.add_medium(egsphant, medium)

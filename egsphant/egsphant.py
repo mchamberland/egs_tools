@@ -175,7 +175,7 @@ class EGSphant:
 
             egsphant.write('\t'.join(str(n) for n in self.dimensions) + '\n')
 
-            egsphant.write('\n'.join(' '.join(str(b) for b in d) for d in self.bounds))
+            egsphant.write('\n'.join(' '.join(format(b, '.4f') for b in d) for d in self.bounds))
 
             phantom_str = '\n'
             for k in range(0, self.dimensions[2]):
