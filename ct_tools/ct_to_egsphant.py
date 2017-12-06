@@ -1,11 +1,9 @@
 import os
 import numpy as np
 import egsphant.manip as egsphantmanip
-import ct_tools.struct as cts
-import ct_tools.ctdata as ctd
 from os.path import join
 from ct_tools.hu2rho import HU2rho
-from egsphant.egsphant import EGSphant, EGSphantFromCT
+from egsphant.egsphant import EGSphant
 from ct_tools.ct_to_tissue import CTConversionToTissue
 
 
@@ -74,13 +72,13 @@ class CTConversionToEGSphant:
         if not self.contour_dictionary:
             contour = 'REMAINDER'
             loop_counter = 0
-            print_counter = 1
-            nvox = ctdata.nvox()
+            print_counter = 10
+            n = int(ctdata.nvox() / 10)
             for (index, ctnum) in np.ndenumerate(ctdata.image):
                 loop_counter += 1
-                if loop_counter % int(nvox / 10) == 0:
-                    print("{:d}%...".format(print_counter * 10))
-                    print_counter += 1
+                if loop_counter % n == 0:
+                    print("{:d}%...".format(print_counter))
+                    print_counter += 10
                 medium = self.tissue_converter[contour].get_medium_name_from_ctnum(ctnum)
                 medium_key = egsphant.get_medium_key(medium)
                 egsphant.phantom[index] = medium_key
@@ -101,7 +99,7 @@ class CTConversionToEGSphant:
         return egsphant
 
     def setup_egsphant(self, ctdata):
-        egsphant = EGSphantFromCT()
+        egsphant = EGSphant()
         egsphant.bounds = ctdata.bounds
         egsphant.dimensions = ctdata.dimensions
         egsphant.phantom = np.empty(ctdata.dimensions, dtype=str, order='F')
@@ -110,3 +108,8 @@ class CTConversionToEGSphant:
             egsphantmanip.add_medium(egsphant, medium)
 
         return egsphant
+
+
+def is_voxel_within_max_and_min_bounds_of_contours(index, contour):
+    is_within = [contour.min_indices[d] < i < contour.max_indices[d] for d, i in enumerate(index)]
+    return all(is_within)

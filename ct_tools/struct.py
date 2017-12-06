@@ -1,6 +1,8 @@
 import numpy as np
 import voxelnav
 from typing import List
+from operator import itemgetter
+from ct_tools.ctdata import CTdata
 from scipy.spatial import cKDTree
 from matplotlib.path import Path
 import brachy_dicom.reader as bdr
@@ -40,14 +42,33 @@ def get_contours_from_dicom(directory='.'):
                 temp_data.append(list(zip(it, it, it)))
 
             temp_data.sort(key=lambda temp: temp[0][2])  # sort by z-slice
+
+            # TODO surely there's a more Pythonic way of doing this...
             zslices = []
             contour_data = []
+            tmp_max_x = []
+            tmp_min_x = []
+            tmp_max_y = []
+            tmp_min_y = []
             for zslice in temp_data:
                 x, y, z = list(zip(*zslice))
+                tmp_max_x.append(max(x))
+                tmp_min_x.append(min(x))
+                tmp_max_y.append(max(y))
+                tmp_min_y.append(min(y))
                 contour_data.append(list(zip(x, y)))
                 zslices.append(z[0])
             contour_dict[number].zslices = zslices
             contour_dict[number].contour_data = contour_data
+
+            max_z = max(zslices)
+            min_z = min(zslices)
+            max_x = max(tmp_max_x)
+            min_x = min(tmp_min_x)
+            max_y = max(tmp_max_y)
+            min_y = min(tmp_min_y)
+            contour_dict[number].max_xyz = (max_x, max_y, max_z)
+            contour_dict[number].min_xyz = (min_x, min_y, min_z)
 
     contour_dict_by_label = {}
     for (key, value) in contour_dict.items():
@@ -64,10 +85,15 @@ class Contour:
         self.colour = colour
         self.zslices = zslices  # the z-slices corresponding to the contour_data, in cm
         self.contour_data = contour_data  # 2-D contour data for each zslice stored as a list of (x,y) tuples, in cm
+        self.max_xyz = None
+        self.min_xyz = None
+        self.max_indices = None
+        self.min_indices = None
         self.missing_slices = None
         self.is_interpolated = False
         self.pixel_indices = None
         self.zindices = None
+        self.contour_mask = None
 
     def is_missing_slices(self, slice_thickness):
         slice_differences = np.diff(self.zslices) / slice_thickness
@@ -137,6 +163,10 @@ class Contour:
             pixel_indices.append(indices)
         self.zindices = zindices
         self.pixel_indices = pixel_indices
+
+    def get_max_and_min_indices_from_ctdata(self, ctdata):
+        self.max_indices = [voxelnav.get_index_from_position(p, ctdata.bounds[i]) for (i, p) in enumerate(self.max_xyz)]
+        self.min_indices = [voxelnav.get_index_from_position(p, ctdata.bounds[i]) for (i, p) in enumerate(self.min_xyz)]
 
 
 class MissingSlices:

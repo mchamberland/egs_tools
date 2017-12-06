@@ -29,12 +29,13 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_coun
 
     print("Calculating weights and new CT values. This may take a while...")
     loop_counter = 0
-    print_counter = 1
+    print_counter = 10
+    n = int(ct.nvox() / 10)
     for (ct_ijk, value) in np.ndenumerate(ct.image):
         loop_counter += 1
-        if loop_counter % int(ct.nvox() / 10) == 0:
-            print("{:d}%...".format(print_counter * 10))
-            print_counter += 1
+        if loop_counter % n == 0:
+            print("{:d}%...".format(print_counter))
+            print_counter += 10
         lower_ijk, upper_ijk = find_ijk_where_ct_boundaries_lie(ct.bounds, bounds, ct_ijk)
         indices = list(zip(lower_ijk, upper_ijk))
         weights = calculate_weights_of_ct_voxel(ct.bounds, bounds, ct_ijk, indices, ct.voxel_size_in_cm(),
