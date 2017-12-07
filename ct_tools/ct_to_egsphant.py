@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from collections import defaultdict
 import voxelnav
 import egsphant.manip as egsphantmanip
 from os.path import join
@@ -11,7 +12,7 @@ from ct_tools.ct_to_tissue import CTConversionToTissue
 class CTConversionToEGSphant:
     def __init__(self, ctscheme_filename=None, contour_dict=None, directory='.', is_verbose=False):
         self.directory = directory
-        self.contour_dictionary = contour_dict  # instead of reading .struct files, can simply pass contours directly
+        self.contour_info_dictionary = contour_dict
         self.density_converter = None
         self.tissue_converter = {}
         self.density_instruction = {}
@@ -40,7 +41,7 @@ class CTConversionToEGSphant:
             contour, ctconv, density_instruction = line.split()
             contour = os.path.splitext(contour)[0]
             self.contour_order.append(contour)
-            if self.contour_dictionary or contour == 'REMAINDER':
+            if self.contour_info_dictionary or contour == 'REMAINDER':
                 if self.is_verbose:
                     print("In structure {}, assign tissues using:".format(contour))
                     if not ctconv.endswith('.ctconv'):
@@ -69,10 +70,12 @@ class CTConversionToEGSphant:
 
     def convert_to_egsphant(self, ctdata, extrapolate=False):
         egsphant = self.setup_egsphant(ctdata)
+        ctdata_dict = setup_ctdata_dictionary(ctdata)
+        contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
 
         print("Converting CT data to egsphant. This may take a while...")
         # easy case: no contours, use REMAINDER
-        if not self.contour_dictionary:
+        if not self.contour_info_dictionary:
             contour = 'REMAINDER'
             loop_counter = 0
             print_counter = 10
@@ -108,15 +111,15 @@ class CTConversionToEGSphant:
                 found_structure = False
                 # TODO instead of iterating over dictionary, iterate over contour_order!
                 for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
-                    contour = self.contour_dictionary[name]
-                    if is_voxel_within_max_and_min_bounds_of_contours(index, contour):
-                        x, y, z = voxelnav.get_voxel_center_from_ijk(index, ctdata.bounds)
-                        slice_index = np.searchsorted(contour.zslices, z) - 1
-                        if contour.contour_as_path[slice_index].contains_point((x, y)):
-                            in_structure = name
-                            found_structure = True
-                            break
-
+                    contour = self.contour_info_dictionary[name]
+                    if contour.contour_as_path[0].contains_point((0, 0)):
+                        in_structure = name
+                        found_structure = True
+                        break
+                found_structure = False
+                in_structure = 0
+                ctnum = 0
+                index = (0, 0, 0)
                 if not found_structure:
                     in_structure = 'REMAINDER'
 
@@ -148,6 +151,37 @@ class CTConversionToEGSphant:
         return egsphant
 
 
-def is_voxel_within_max_and_min_bounds_of_contours(index, contour):
-    is_within = [contour.min_indices[d] < i < contour.max_indices[d] for d, i in enumerate(index)]
-    return all(is_within)
+def setup_ctdata_dictionary(ctdata):
+    ctdata_dict = {}
+    loop_counter = 0
+    print_counter = 10
+    n = int(ctdata.nvox() / 10)
+    xybounds = ctdata.bounds[0:2]
+    print("Setting up the CT data for conversion...")
+    for (index, ctnum) in np.ndenumerate(ctdata.image):
+        i, j, k = index
+        loop_counter += 1
+        if loop_counter % n == 0:
+            print("{:d}%...".format(print_counter))
+            print_counter += 10
+        (x, y) = voxelnav.get_pixel_center_from_ij((i, j), xybounds)
+        ctdata_dict[index] = (ctnum, (x, y), k)
+    print("CT data ready!")
+    return ctdata_dict
+
+
+def setup_contour_path_dictionary(ctdata, contour_info_dict):
+    contour_path_dict = defaultdict(dict)
+    zbounds = ctdata.bounds[2]
+    for name, contour in contour_info_dict.items():
+        for zslice in contour.zslices:
+            k = voxelnav.get_index_from_position(zslice, zbounds)
+            # some structures have multiple contours on the same slice (e.g., ribs), so first check that there are no
+            # contours currently stored for this slice; otherwise, append the contour to the list
+            if k not in contour_path_dict:
+                contour_path_dict[name][k] = [contour_info_dict[name].contour_as_path[round(zslice, 4)]]
+            else:
+                contour_path_dict[name][k].append(contour_info_dict[name].contour_as_path[round(zslice, 4)])
+
+    print("Contour data ready!")
+    return contour_path_dict
