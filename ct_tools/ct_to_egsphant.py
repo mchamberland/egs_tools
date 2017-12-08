@@ -101,25 +101,22 @@ class CTConversionToEGSphant:
             loop_counter = 0
             print_counter = 10
             n = int(ctdata.nvox() / 10)
-            for (index, ctnum) in np.ndenumerate(ctdata.image):
+            for (index, value) in ctdata_dict.items():
                 loop_counter += 1
                 if loop_counter % n == 0:
                     print("{:d}%...".format(print_counter))
                     print_counter += 10
 
+                ctnum, (x, y), k = value
                 in_structure = None
                 found_structure = False
-                # TODO instead of iterating over dictionary, iterate over contour_order!
                 for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
-                    contour = self.contour_info_dictionary[name]
-                    if contour.contour_as_path[0].contains_point((0, 0)):
-                        in_structure = name
-                        found_structure = True
-                        break
-                found_structure = False
-                in_structure = 0
-                ctnum = 0
-                index = (0, 0, 0)
+                    if k in contour_path_dict[name]:
+                        for path in contour_path_dict[name][k]:
+                            if path.contains_point((x, y)):
+                                in_structure = name
+                                found_structure = True
+                                break
                 if not found_structure:
                     in_structure = 'REMAINDER'
 
