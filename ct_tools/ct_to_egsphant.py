@@ -1,9 +1,9 @@
 import os
-import numpy as np
-from collections import defaultdict
 import voxelnav
+import numpy as np
 import egsphant.manip as egsphantmanip
 from os.path import join
+from collections import defaultdict
 from ct_tools.hu2rho import HU2rho
 from egsphant.egsphant import EGSphant
 from ct_tools.ct_to_tissue import CTConversionToTissue

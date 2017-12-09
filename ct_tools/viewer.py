@@ -1,3 +1,5 @@
+# This was taken from DataCamp (https://www.datacamp.com/community/tutorials/matplotlib-3d-volumetric-data)
+# By Juan Nunez-Iglesias, with modifications by Marc J.P. Chamberland
 import matplotlib.pyplot as plt
 
 

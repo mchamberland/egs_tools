@@ -1,11 +1,9 @@
-import numpy as np
 import voxelnav
+import numpy as np
+import brachy_dicom.reader as bdr
 from typing import List
 from scipy.spatial import cKDTree
 from matplotlib.path import Path
-import brachy_dicom.reader as bdr
-
-ROI_dict = {}
 
 
 def get_contours_from_dicom(directory='.'):
@@ -18,7 +16,6 @@ def get_contours_from_dicom(directory='.'):
     for ROI in struct.StructureSetROISequence:
         label = ROI.ROIName.replace(' ', '_').lower()
         number = ROI.ROINumber
-        ROI_dict[label] = number
         contour_dict[number] = Contour(number=number, name=label)
 
     for ROI in struct.RTROIObservationsSequence:
