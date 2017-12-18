@@ -4,7 +4,7 @@ from ct_tools.ctdata import CTdata
 
 
 class SimpleThresholdReplacement:
-    def __init__(self, threshold=200, replacement=25, low_threshold=-100, low_replacement=-50,
+    def __init__(self, threshold=95, replacement=45, low_threshold=-100, low_replacement=-50,
                  xy_search_in_voxels=10, z_search_in_voxels=2):
 
         self.xy_search = xy_search_in_voxels
