@@ -5,7 +5,7 @@ from ct_tools.ctdata import CTdata
 
 
 class SimpleThresholdReplacement:
-    def __init__(self, threshold=95, replacement=45, low_threshold=-100, low_replacement=-50,
+    def __init__(self, threshold=90, replacement=35, low_threshold=-100, low_replacement=-50,
                  xy_search_in_mm=4, z_search_in_slices=2):
 
         self.xy_search = xy_search_in_mm

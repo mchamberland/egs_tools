@@ -117,6 +117,9 @@ class CTConversionToEGSphant:
                                 in_structure = name
                                 found_structure = True
                                 break
+                        if found_structure:
+                            break
+
                 if not found_structure:
                     in_structure = 'REMAINDER'
 
