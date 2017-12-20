@@ -1,4 +1,5 @@
 import sys
+import os.path as path
 import argparse
 from os import listdir
 from os.path import join, isfile, splitext
@@ -34,18 +35,37 @@ parser.add_argument('--write_ctdata', action='store_true',
 parser.add_argument('--read_ctdata', dest='input_ctdata', nargs=1,
                     help='Read in a .ctdata file instead of a DICOM CT dataset.')
 
+parser.add_argument('-v, --verbose', action='store_true',
+                    help='Increase verbosity.')
+
+args = parser.parse_args()
+
+if not path.exists(args.directory):
+    print('{} does not exist.'.format(args.directory))
+    sys.exit()
+
+if not args.ctscheme.endswith('.ctdata'):
+    args.ctscheme += '.ctdata'
+
+if not path.exists(args.ctscheme):
+    print('{} does not exist.'.format(args.ctscheme))
+    sys.exit()
 
 
-ctdata = ctd.get_ctdata_from_dicom('dicom')
+ctdata = ctd.get_ctdata_from_dicom(args.directory)
+
+contours = cts.get_contours_from_dicom(args.directory)
+
+ctconversion = cte.CTConversionToEGSphant(args.ctscheme, contours, is_verbose=args.verbose)
+
+
 files, plans = bdr.read_plan_files_in_directory('dicom')
 seed_locations = bdr.get_seed_locations_in_mm(plans[0]) / 10
-
 str = cta.SimpleThresholdReplacement()
 str.apply_str_to_seed_locations(ctdata, seed_locations)
 ctdata.write_to_file('1721177_MAR.ctdata')
 
 
-contours = cts.get_contours_from_dicom('dicom')
 
 
 
