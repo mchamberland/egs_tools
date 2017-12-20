@@ -162,6 +162,9 @@ class EGSphant:
         Args:
             filename (str): filename of the egsphant file to be written
         """
+        if not filename.endswith('.egsphant'):
+            filename += '.egsphant'
+
         with open(filename, 'wt') as egsphant:
             egsphant.write('{}\n'.format(self.number_of_media))
             for m in self.media:

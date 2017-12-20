@@ -98,6 +98,9 @@ class CTdata:
         return self.image[index]
 
     def write_to_file(self, filename="image.ctdata"):
+        if not (filename.endswith('.ctdata') or filename.endswith('.ctdata.gz')):
+            filename += '.ctdata'
+
         if filename.endswith('gz'):
             file = gzip.open(filename, 'wt')
         else:
@@ -179,7 +182,7 @@ def read_ctdata(filename):
         filename += '.ctdata'
 
     if not os.path.exists(filename):
-        print("{} does not exist.".format(filename))
+        print("CT data file {} does not exist.".format(filename))
         raise FileNotFoundError
 
     lines = open_ctdata(filename)

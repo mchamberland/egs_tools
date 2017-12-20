@@ -1,6 +1,6 @@
 import math
+import numpy as np
 import voxelnav
-from typing import List
 from ct_tools.ctdata import CTdata
 
 
@@ -15,7 +15,7 @@ class SimpleThresholdReplacement:
         self.low_threshold = low_threshold
         self.low_replacement = low_replacement
 
-    def apply_str_to_seed_locations(self, ctdata: CTdata, seed_locations: List[List[float]]):
+    def apply_str_to_seed_locations(self, ctdata: CTdata, seed_locations: np.ndarray):
         # this assumes pixels are square
         xy_search_in_voxels = int((self.xy_search / 10.) / ctdata.voxel_size_in_cm()[0])
         for (i, location) in enumerate(seed_locations):
