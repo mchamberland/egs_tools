@@ -1,3 +1,4 @@
+#!/home/mchamber/venvs/py-3.6/bin/python
 import sys
 import os
 import argparse
@@ -12,10 +13,12 @@ import brachy_dicom.reader as bdr
 
 parser = argparse.ArgumentParser(description='Convert a DICOM CT dataset to the EGSnrc egsphant format.')
 
-parser.add_argument('directory')
-parser.add_argument('ctscheme')
+parser.add_argument('directory',
+                    help='The directory where the DICOM (CT, RP, RS) or ctdata files are located.')
+parser.add_argument('ctscheme',
+                    help='The name of the ctscheme conversion file.')
 
-parser.add_argument('--read_ctdata', dest='input_ctdata', nargs=1,
+parser.add_argument('--read_ctdata', dest='input_ctdata',
                     help='Read in a .ctdata file instead of a DICOM CT dataset. The .ctdata file is expected to be in '
                          'the directory provided as the first argument of the script.')
 
@@ -36,7 +39,7 @@ parser.add_argument('--resample', nargs=4,
 parser.add_argument('--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
 
-parser.add_argument('-v, --verbose', action='store_true',
+parser.add_argument('-v', '--verbose', action='store_true',
                     help='Increase verbosity.')
 
 args = parser.parse_args()
@@ -45,6 +48,9 @@ args = parser.parse_args()
 if not os.path.exists(args.directory):
     print('Directory {} does not exist.'.format(args.directory))
     sys.exit()
+
+if not args.ctscheme.endswith('.ctscheme'):
+    args.ctscheme += '.ctscheme'
 
 if not os.path.exists(args.ctscheme):
     print('CT conversion scheme file {} does not exist.'.format(args.ctscheme))
