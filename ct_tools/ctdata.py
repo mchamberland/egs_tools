@@ -8,6 +8,7 @@ CTframe -- holds a single x-y CT slice, in raw pixel numbers
 CTdata -- a CTdata object
 """
 import os
+import sys
 import gzip
 import voxelnav
 import numpy as np
@@ -174,18 +175,14 @@ def crop_ctdata_to_slice_indices(original: CTdata, slice1: int, slice2: int) -> 
 
 
 def read_ctdata(filename):
+    if not (filename.endswith('.ctdata') or filename.endswith('.ctdata.gz')):
+        filename += '.ctdata'
+
     if not os.path.exists(filename):
-        return -1
+        print("{} does not exist.".format(filename))
+        raise FileNotFoundError
 
-    if filename.endswith('gz'):
-        with gzip.open(filename, 'r') as file:
-            lines = file.readlines()
-            lines = [line.strip() for line in lines if line.strip()]
-    else:
-        with open(filename, 'r') as file:
-            lines = file.readlines()
-            lines = [line.strip() for line in lines if line.strip()]
-
+    lines = open_ctdata(filename)
     ctdata = CTdata()
     ctdata.dimensions = list(map(int, lines[0].split()))
     del lines[0]
@@ -204,6 +201,27 @@ def read_ctdata(filename):
 
     del lines
     return ctdata
+
+
+def open_ctdata(filename):
+    if filename.endswith('gz'):
+        try:
+            with gzip.open(filename, 'r') as file:
+                lines = file.readlines()
+                lines = [line.strip() for line in lines if line.strip()]
+                return lines
+        except IOError:
+            print("Error reading file {}.".format(filename))
+            sys.exit()
+    else:
+        try:
+            with open(filename, 'r') as file:
+                lines = file.readlines()
+                lines = [line.strip() for line in lines if line.strip()]
+                return lines
+        except IOError:
+            print("Error reading file {}.".format(filename))
+            sys.exit()
 
 
 def get_list_of_ctframes(ct_files, verbose=False) -> List[CTframe]:
