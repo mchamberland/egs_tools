@@ -58,7 +58,7 @@ if plans:
     input_file.geometry(egsphant=base_name, transformations=transformations)
     input_file.source_volume_correction()
     input_file.source(transformations=transformations)
-    input_file.scoring_options(rakr=rakr, muen_for_media=media_list)
+    input_file.scoring_options(rakr=rakr, muen_file='brachy_xcom_1.5MeV_egsphant.muendat', muen_for_media=media_list)
     input_file.variance_reduction()
     input_file.transport_parameters()
     input_file.rng()
