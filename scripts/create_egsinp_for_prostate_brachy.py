@@ -1,6 +1,7 @@
 #!/home/mchamber/venvs/py-3.6/bin/python
 import sys
 import os
+from os.path import join
 import argparse
 import egsinp.egsinp as egsinp
 from egsinp.egsinp import EGSinp
@@ -36,7 +37,7 @@ else:
     base_name = os.path.basename(args.directory)
 
 
-input_file = EGSinp(filename=base_name, path_type='absolute')
+input_file = EGSinp(filename=join(args.directory, base_name), path_type='absolute')
 
 plan_filenames, plans = bdr.read_plan_files_in_directory(args.directory)
 if plans:
@@ -52,7 +53,10 @@ if plans:
                  'CALCIFICATION_ICRU46, M_SOFT_TISSUE_ICRU46, CORTICAL_BONE_WW86'
 
     input_file.source_model = source_model
-    input_file.run_control(ncase=float(args.nhist))
+    if args.nhist:
+        input_file.run_control(ncase=float(args.nhist))
+    else:
+        input_file.run_control()
     input_file.run_mode()
     input_file.media_definition()
     input_file.geometry(egsphant=base_name, transformations=transformations)

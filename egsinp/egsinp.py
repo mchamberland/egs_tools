@@ -360,14 +360,16 @@ class EGSinp:
             library_str = "library = egs_glib"
             type_str = "type = egsphant"
             egsphant_str = "egsphant file = {0}lib/geometry/phantoms/egsphant/{1}.egsphant".format(self.root, egsphant)
-            egsphant_block = "{t1}{0}{t2}{1}{t2}{2}{t2}{3}{t1}{4}\n".format(start_geometry_delimiter,
-                                                                            name_str,
-                                                                            library_str,
-                                                                            type_str,
-                                                                            egsphant_str,
-                                                                            stop_geometry_delimiter,
-                                                                            t1=self.t1,
-                                                                            t2=self.t2)
+            density_str = "density file = {0}lib/media/material.dat".format(self.root)
+            egsphant_block = "{t1}{0}{t2}{1}{t2}{2}{t2}{3}{t2}{4}{t2}{5}{t1}{6}\n".format(start_geometry_delimiter,
+                                                                                          name_str,
+                                                                                          library_str,
+                                                                                          type_str,
+                                                                                          egsphant_str,
+                                                                                          density_str,
+                                                                                          stop_geometry_delimiter,
+                                                                                          t1=self.t1,
+                                                                                          t2=self.t2)
 
         name_str = "name = seed"
         library_str = "library = egs_glib"
