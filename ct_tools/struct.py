@@ -44,7 +44,7 @@ def get_contours_from_dicom(directory='.'):
             for zslice in temp_data:
                 x, y, z = list(zip(*zslice))
                 contour_data.append(list(zip(x, y)))
-                contour_as_path[round(z[0], 4)] = Path(list(zip(x, y)))
+                contour_as_path[round(z[0], 4)] = Path(list(zip(x, y)), closed=True)
                 zslices.append(z[0])
             contour_dict[number].zslices = zslices
             contour_dict[number].contour_data = contour_data
