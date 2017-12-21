@@ -58,7 +58,7 @@ class EGSinp:
         self.total_dwell_time_in_s = 0.
         self.filename = filename
         if path_type == "absolute":
-            self.root = os.path.expandvars("$EGS_HOME")
+            self.root = os.path.join(os.path.expandvars("$EGS_HOME"), 'egs_brachy/')
         self.input_file = open(filename + '.egsinp', 'w')
 
     def run_control(self, ncase=1e6, nbatch=1, nchunk=1, calculation='first', geometry_error_limit=2500,
@@ -209,7 +209,7 @@ class EGSinp:
         if source_type == "isotropic":
             library_str = "library = egs_isotropic_source"
             charge_str = "charge = 0"
-            include_str = "include file = {0}lib/geometry/sources/{1}/{2}/{1}.shape".format(
+            include_str = "include file = {0}lib/geometry/sources/{1}/{2}/{2}.shape".format(
                 self.root,
                 self.SOURCE_RADIONUCLIDE[self.source_model],
                 self.source_model)
@@ -373,7 +373,7 @@ class EGSinp:
 
         name_str = "name = seed"
         library_str = "library = egs_glib"
-        include_str = "include file = {0}lib/geometry/sources/{1}/{2}/{2}.shape".format(
+        include_str = "include file = {0}lib/geometry/sources/{1}/{2}/{2}.geom".format(
             self.root, self.SOURCE_RADIONUCLIDE[self.source_model], self.source_model)
         seed_block = "{t1}{0}{t2}{1}{t2}{2}{t2}{3}{t1}{4}\n".format(start_geometry_delimiter,
                                                                     name_str,
@@ -419,13 +419,13 @@ class EGSinp:
                                                                        t3=self.t3,
                                                                        t4=self.t4)
 
-        inscribed_geom_block = "{t2}{0}{t3}{1}{2}{3}\n".format(start_inscribed_geometry_delimiter,
-                                                               inscribed_geom_str,
-                                                               transformations_block,
-                                                               discovery_block,
-                                                               stop_inscribed_geometry_delimiter,
-                                                               t2=self.t2,
-                                                               t3=self.t3)
+        inscribed_geom_block = "{t2}{0}{t3}{1}{2}{3}{t2}{4}\n".format(start_inscribed_geometry_delimiter,
+                                                                      inscribed_geom_str,
+                                                                      transformations_block,
+                                                                      discovery_block,
+                                                                      stop_inscribed_geometry_delimiter,
+                                                                      t2=self.t2,
+                                                                      t3=self.t3)
 
         autoenvelope_block = "{t1}{0}{t2}{1}{t2}{2}{t2}{3}{t2}{4}{5}{t1}{6}\n".format(start_geometry_delimiter,
                                                                                       name_str,

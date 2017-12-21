@@ -18,16 +18,16 @@ parser.add_argument('directory',
 parser.add_argument('ctscheme',
                     help='The name of the ctscheme conversion file.')
 
-parser.add_argument('--read_ctdata', dest='input_ctdata',
+parser.add_argument('-r', '--read_ctdata', dest='input_ctdata',
                     help='Read in a .ctdata file instead of a DICOM CT dataset. The .ctdata file is expected to be in '
                          'the directory provided as the first argument of the script.')
 
-parser.add_argument('--apply_str', dest='mar', type=int, nargs='*',
+parser.add_argument('-a', '--apply_str', dest='mar', type=int, nargs='*',
                     help='Apply metal artifact reduction (Simple Threshold Reduction method). Optionally, specify the '
                          'threshold and replacement values and the search radius in mm and the number of z slices from '
                          'the seed locations.')
 
-parser.add_argument('--crop', type=float, nargs='*',
+parser.add_argument('-c', '--crop', type=float, nargs='*',
                     help='Crop the CT dataset to the (x1, x2, y1, y2, z1, z2) bounds specified (in cm). If a single '
                          'value n is passed, then the set is cropped to a cube of size n at the centre of the dataset')
 
@@ -36,7 +36,7 @@ parser.add_argument('--resample', nargs=4,
                          'the size is specified in cm (''size'') or in voxels (''voxels''). Note that this is a very '
                          'computationally intensive and time consuming operation.')
 
-parser.add_argument('--write_ctdata', action='store_true',
+parser.add_argument('-w', '--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
 
 parser.add_argument('-v', '--verbose', action='store_true',
