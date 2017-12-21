@@ -63,7 +63,8 @@ if args.directory == '.':
 else:
     base_name = os.path.basename(args.directory)
 
-
+if args.verbose:
+    print('Reading CT dataset...')
 if not args.input_ctdata:
     ctdata = ctd.get_ctdata_from_dicom(args.directory)
 else:
@@ -71,6 +72,8 @@ else:
 
 
 if args.mar:
+    if args.verbose:
+        print('Applying metal artifact reduction...')
     search_radius, slices = 0, 0
     if len(args.mar) == 2:
         threshold, replacement = args.mar
@@ -96,10 +99,14 @@ if args.mar:
 
 
 if args.crop:
+    if args.verbose:
+        print('Cropping CT dataset...')
     ctdata = ctd.crop_ctdata_to_bounds(ctdata, args.crop)
 
 
 if args.resample:
+    if args.verbose:
+        print('Resampling CT dataset...')
     nx, ny, nz, size_or_voxels = args.resample
     if not (size_or_voxels == 'size' or size_or_voxels == 'voxels'):
         raise Exception('Specify if the resampling is specified in cm (''size'') or in voxels (''voxels'').')
@@ -118,6 +125,8 @@ contours = cts.get_contours_from_dicom(args.directory)
 
 
 if args.write_ctdata:
+    if args.verbose:
+        print('Writing CT data to file before conversion to egsphant starts...')
     ctdata.write_to_file(join(args.directory, base_name))
 
 
