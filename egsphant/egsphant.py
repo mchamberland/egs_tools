@@ -117,6 +117,9 @@ class EGSphant:
             filename (str): filename of the egsphant file to be read
 
         """
+        if not (filename.endswith('.egsphant') or filename.endswith('.egsphant.gz')):
+            filename += '.egsphant'
+
         if not os.path.exists(filename):
             return -1
 

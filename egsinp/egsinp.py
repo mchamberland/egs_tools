@@ -59,7 +59,7 @@ class EGSinp:
         self.filename = filename
         if path_type == "absolute":
             self.root = os.path.expandvars("$EGS_HOME")
-        self.input_file = open(filename + '.egsinp', 'a')
+        self.input_file = open(filename + '.egsinp', 'w')
 
     def run_control(self, ncase=1e6, nbatch=1, nchunk=1, calculation='first', geometry_error_limit=2500,
                     egsdat_file_format='gzip'):
@@ -511,27 +511,27 @@ class EGSinp:
     def open(self):
         self.input_file = open(self.filename + '.egsinp', 'a')
 
-    @staticmethod
-    def create_seed_transformations_file(seed_locations, filename="seed_locations", convert_to_cm=True,
-                                         place_in_egs_brachy_lib=True):
-        if convert_to_cm:
-            seed_locations = seed_locations / 10
 
-        if place_in_egs_brachy_lib:
-            lib_path = "egs_brachy/lib/geometry/transformations/"
-            root = os.path.expandvars("$EGS_HOME")
-            the_path = os.path.join(root, lib_path)
-        else:
-            the_path = ""
+def create_seed_transformations_file(seed_locations, filename="seed_locations", convert_to_cm=True,
+                                     place_in_egs_brachy_lib=True):
+    if convert_to_cm:
+        seed_locations = seed_locations / 10
 
-        full_path = os.path.join(the_path, filename + ".transf")
+    if place_in_egs_brachy_lib:
+        lib_path = "egs_brachy/lib/geometry/transformations/"
+        root = os.path.expandvars("$EGS_HOME")
+        the_path = os.path.join(root, lib_path)
+    else:
+        the_path = ""
 
-        with open(full_path, 'w') as file:
-            start_str = ":start transformation:\n"
-            stop_str = ":stop transformation:\n\n"
-            translation_root = "\ttranslation = "
+    full_path = os.path.join(the_path, filename + ".transf")
 
-            for location in seed_locations:
-                seed_location = ', '.join(map(str, location))
-                translation_str = translation_root + seed_location + "\n"
-                file.write(start_str + translation_str + stop_str)
+    with open(full_path, 'w') as file:
+        start_str = ":start transformation:\n"
+        stop_str = ":stop transformation:\n\n"
+        translation_root = "\ttranslation = "
+
+        for location in seed_locations:
+            seed_location = ', '.join(map(str, location))
+            translation_str = translation_root + seed_location + "\n"
+            file.write(start_str + translation_str + stop_str)
