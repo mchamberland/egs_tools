@@ -22,7 +22,10 @@ parser.add_argument('-r', '--read_ctdata', dest='input_ctdata',
                     help='Read in a .ctdata file instead of a DICOM CT dataset. The .ctdata file is expected to be in '
                          'the directory provided as the first argument of the script.')
 
-parser.add_argument('-a', '--apply_str', type=int, nargs='?', const=True,
+parser.add_argument('-a', '--apply_default_str', action='store_true',
+                    help='Apply metal artifact reduction (Simple Threshold Reduction method, with default parameters.')
+
+parser.add_argument('--apply_str', dest='mar', type=int, nargs='*',
                     help='Apply metal artifact reduction (Simple Threshold Reduction method). Optionally, specify the '
                          'threshold and replacement values and the search radius in mm and the number of z slices from '
                          'the seed locations.')
@@ -70,14 +73,26 @@ else:
     ctdata = ctd.read_ctdata(join(args.directory, args.input_ctdata))
 
 
-if args.apply_str:
+if args.apply_default_str:
+    if args.verbose:
+        print('Applying metal artifact reduction...')
+    plan_filenames, plans = bdr.read_plan_files_in_directory(args.directory)
+    if plans:
+        seed_locations = bdr.get_seed_locations_in_mm(plans[0]) / 10
+        artifact_reduction = cta.SimpleThresholdReplacement()
+        artifact_reduction.apply_str_to_seed_locations(ctdata, seed_locations)
+    else:
+        raise Exception('No DICOM RP plan files were found in directory')
+
+
+if args.mar:
     if args.verbose:
         print('Applying metal artifact reduction...')
     search_radius, slices = 0, 0
-    if len(args.apply_str) == 2:
-        threshold, replacement = args.apply_str
-    elif len(args.apply_str) == 4:
-        threshold, replacement, search_radius, slices = args.apply_str
+    if len(args.mar) == 2:
+        threshold, replacement = args.mar
+    elif len(args.mar) == 4:
+        threshold, replacement, search_radius, slices = args.mar
     else:
         raise Exception('Metal artifact reduction option expects the threshold and replacement values, and '
                         'optionally the search radius in mm and the number of z slices from the seed locations.')
@@ -86,7 +101,7 @@ if args.apply_str:
     if plans:
         seed_locations = bdr.get_seed_locations_in_mm(plans[0]) / 10
         artifact_reduction = cta.SimpleThresholdReplacement()
-        if len(args.apply_str) == 2:
+        if len(args.mar) == 2:
             artifact_reduction = cta.SimpleThresholdReplacement(threshold=threshold, replacement=replacement)
         else:
             artifact_reduction = cta.SimpleThresholdReplacement(threshold=threshold, replacement=replacement,
