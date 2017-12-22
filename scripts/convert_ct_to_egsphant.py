@@ -33,8 +33,7 @@ parser.add_argument('-c', '--crop', type=float, nargs='*',
 
 parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
-                         'the size is specified in cm (''size'') or in voxels (''count''). Note that this is a very '
-                         'computationally intensive and time consuming operation.')
+                         'the size is specified in cm (''size'') or in voxels (''count'').')
 
 parser.add_argument('-w', '--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
