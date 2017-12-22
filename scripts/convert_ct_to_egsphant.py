@@ -87,7 +87,7 @@ if args.apply_str:
     if plans:
         seed_locations = bdr.get_seed_locations_in_mm(plans[0]) / 10
         artifact_reduction = cta.SimpleThresholdReplacement()
-        if len(args.mar) == 2:
+        if len(args.apply_str) == 2:
             artifact_reduction = cta.SimpleThresholdReplacement(threshold=threshold, replacement=replacement)
         else:
             artifact_reduction = cta.SimpleThresholdReplacement(threshold=threshold, replacement=replacement,
