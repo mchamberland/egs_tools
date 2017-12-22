@@ -22,7 +22,7 @@ parser.add_argument('-r', '--read_ctdata', dest='input_ctdata',
                     help='Read in a .ctdata file instead of a DICOM CT dataset. The .ctdata file is expected to be in '
                          'the directory provided as the first argument of the script.')
 
-parser.add_argument('-a', '--apply_str', dest='mar', type=int, nargs='*',
+parser.add_argument('-a', '--apply_str', type=int, nargs='?', const=True,
                     help='Apply metal artifact reduction (Simple Threshold Reduction method). Optionally, specify the '
                          'threshold and replacement values and the search radius in mm and the number of z slices from '
                          'the seed locations.')
@@ -33,7 +33,7 @@ parser.add_argument('-c', '--crop', type=float, nargs='*',
 
 parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
-                         'the size is specified in cm (''size'') or in voxels (''voxels''). Note that this is a very '
+                         'the size is specified in cm (''size'') or in voxels (''count''). Note that this is a very '
                          'computationally intensive and time consuming operation.')
 
 parser.add_argument('-w', '--write_ctdata', action='store_true',
@@ -71,14 +71,14 @@ else:
     ctdata = ctd.read_ctdata(join(args.directory, args.input_ctdata))
 
 
-if args.mar:
+if args.apply_str:
     if args.verbose:
         print('Applying metal artifact reduction...')
     search_radius, slices = 0, 0
-    if len(args.mar) == 2:
-        threshold, replacement = args.mar
-    elif len(args.mar) == 4:
-        threshold, replacement, search_radius, slices = args.mar
+    if len(args.apply_str) == 2:
+        threshold, replacement = args.apply_str
+    elif len(args.apply_str) == 4:
+        threshold, replacement, search_radius, slices = args.apply_str
     else:
         raise Exception('Metal artifact reduction option expects the threshold and replacement values, and '
                         'optionally the search radius in mm and the number of z slices from the seed locations.')
@@ -108,8 +108,8 @@ if args.resample:
     if args.verbose:
         print('Resampling CT dataset...')
     nx, ny, nz, size_or_voxels = args.resample
-    if not (size_or_voxels == 'size' or size_or_voxels == 'voxels'):
-        raise Exception('Specify if the resampling is specified in cm (''size'') or in voxels (''voxels'').')
+    if not (size_or_voxels == 'size' or size_or_voxels == 'count'):
+        raise Exception('Specify if the resampling is specified in cm (''size'') or in voxels (''count'').')
     if size_or_voxels == 'size':
         nx = float(nx)
         ny = float(ny)
