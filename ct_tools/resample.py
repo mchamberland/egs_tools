@@ -1,4 +1,5 @@
 import numpy as np
+import skimage.transform as skit
 from typing import Tuple
 from ct_tools.ctdata import CTdata
 
@@ -27,26 +28,8 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_coun
     resampled.bounds = bounds
     resampled.image = np.zeros(dimensions)
 
-    print("Calculating weights and new CT values. This may take a while...")
-    loop_counter = 0
-    print_counter = 10
-    n = int(ct.nvox() / 10)
-    for (ct_ijk, value) in np.ndenumerate(ct.image):
-        loop_counter += 1
-        if loop_counter % n == 0:
-            print("{:d}%...".format(print_counter))
-            print_counter += 10
-        lower_ijk, upper_ijk = find_ijk_where_ct_boundaries_lie(ct.bounds, bounds, ct_ijk)
-        indices = list(zip(lower_ijk, upper_ijk))
-        weights = calculate_weights_of_ct_voxel(ct.bounds, bounds, ct_ijk, indices, ct.voxel_size_in_cm(),
-                                                adjusted_voxel_size)
+    resampled.image = skit.resize(ct, dimensions, preserve_range=True)
 
-        for i in range(lower_ijk[0], upper_ijk[0] + 1):
-            for j in range(lower_ijk[1], upper_ijk[1] + 1):
-                for k in range(lower_ijk[2], upper_ijk[2] + 1):
-                    resampled.image[(i, j, k)] += ct.image[ct_ijk] * weights[0][i] * weights[1][j] * weights[2][k]
-
-    print("Resampling completed!")
     return resampled
 
 
