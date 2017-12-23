@@ -36,7 +36,7 @@ parser.add_argument('-c', '--crop', type=float, nargs='*',
 
 parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
-                         'the size is specified in cm (''size'') or in voxels (''count'').')
+                         'the size is specified in cm (''size'') or in voxels (''voxels'').')
 
 parser.add_argument('-w', '--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
@@ -123,7 +123,7 @@ if args.resample:
         print('Resampling CT dataset...')
     nx, ny, nz, size_or_voxels = args.resample
     if not (size_or_voxels == 'size' or size_or_voxels == 'count'):
-        raise Exception('Specify if the resampling is specified in cm (''size'') or in voxels (''count'').')
+        raise Exception('Specify if the resampling is specified in cm (''size'') or in voxels (''voxels'').')
     if size_or_voxels == 'size':
         nx = float(nx)
         ny = float(ny)

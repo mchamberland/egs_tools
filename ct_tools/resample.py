@@ -4,16 +4,16 @@ from typing import Tuple
 from ct_tools.ctdata import CTdata
 
 
-def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_count='size') -> CTdata:
+def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_voxels='size') -> CTdata:
     # based on the the resampleCT subroutine in ctcreate.mortran in EGSnrc
     # resampling weighs the original CT values by the fractional volume of each resampled (xyz) voxel that overlaps
     # with a given CT voxel
-    if size_or_count == "size":
+    if size_or_voxels == "size":
         voxel_size_in_cm = voxels
-    elif size_or_count == "count":
+    elif size_or_voxels == "voxels":
         voxel_size_in_cm = [ct.image_size_in_cm()[i] / v for (i, v) in enumerate(voxels)]
     else:
-        raise Exception("Argument 'size_or_count' must be either 'size' or 'count'.")
+        raise Exception("Argument 'size_or_count' must be either 'size' or 'voxels'.")
     print("Resampling CT data...")
     print("Requested voxel size in cm: ({:.4f}, {:.4f}, {:.4f})".format(voxel_size_in_cm[0],
                                                                         voxel_size_in_cm[1],
@@ -28,7 +28,7 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_coun
     resampled.bounds = bounds
     resampled.image = np.zeros(dimensions)
 
-    resampled.image = skit.resize(ct, dimensions, preserve_range=True)
+    resampled.image = skit.resize(ct.image, dimensions, preserve_range=True)
 
     return resampled
 
