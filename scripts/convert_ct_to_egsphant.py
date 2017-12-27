@@ -122,7 +122,7 @@ if args.resample:
     if args.verbose:
         print('Resampling CT dataset...')
     nx, ny, nz, size_or_voxels = args.resample
-    if not (size_or_voxels == 'size' or size_or_voxels == 'count'):
+    if not (size_or_voxels == 'size' or size_or_voxels == 'voxels'):
         raise Exception('Specify if the resampling is specified in cm (''size'') or in voxels (''voxels'').')
     if size_or_voxels == 'size':
         nx = float(nx)
