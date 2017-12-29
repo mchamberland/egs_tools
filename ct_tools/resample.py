@@ -1,4 +1,5 @@
 import numpy as np
+import fractions
 import skimage.transform as skit
 from typing import Tuple
 from ct_tools.ctdata import CTdata
@@ -61,46 +62,39 @@ def calculate_new_bounds(ct_bounds, voxel_size, dimensions):
     return [[ct_bounds[i][0] + j * voxel_size[i] for j in range(dimensions[i] + 1)] for i in range(3)]
 
 
-def find_ijk_where_ct_boundaries_lie(ct_bounds, bounds, ct_ijk):
-    ct_lower_bounds = [ct_bounds[i][v] for (i, v) in enumerate(ct_ijk)]
-    ct_upper_bounds = [ct_bounds[i][v + 1] for (i, v) in enumerate(ct_ijk)]
+def fast_downscale(old_size, new_size):
+    original_dim = old_size
+    new_dim = new_size
+    f = fractions.Fraction(original_dim, new_dim).limit_denominator()
+    new_dim_reduced = f.denominator
+    original_dim_reduced = f.numerator
+    weights = np.zeros((new_dim_reduced, original_dim_reduced))
+    wtot = original_dim / new_dim
+    index_orig = 0
+    index = 0
+    wrem = wtot
 
-    lower_ijk = np.array([np.searchsorted(bounds[i], ct_lower_bounds[i]) - 1 for i in range(3)])
-    lower_ijk[lower_ijk < 0] = 0
+    while index < new_dim_reduced and index_orig < original_dim_reduced:
+        while wrem >= 1.:
+            weights[(index, index_orig)] = 1
+            index_orig += 1
+            wrem -= 1
+        if index_orig == original_dim_reduced:
+            break
+        weights[(index, index_orig)] = wrem
+        next_weight = 1 - wrem
+        index += 1
+        if index == new_dim_reduced:
+            break
+        weights[(index, index_orig)] = next_weight
+        wrem = wtot - next_weight
+        index_orig += 1
 
-    upper_ijk = np.array([np.searchsorted(bounds[i], ct_upper_bounds[i]) - 1 for i in range(3)])
-    upper_ijk[upper_ijk < 0] = 0
+    the_weights = np.zeros((new_dim, original_dim))
+    n = int(original_dim / original_dim_reduced)
+    for i in range(n):
+        np.copyto(the_weights[i*new_dim_reduced:(i+1)*new_dim_reduced,
+                  i*original_dim_reduced:(i+1)*original_dim_reduced], weights)
 
-    return lower_ijk, upper_ijk
+    return the_weights / wtot
 
-
-def calculate_weights_of_ct_voxel(ct_bounds, bounds, ct_ijk, indices, ct_voxel_size, voxel_size):
-    max_xindex = max(len(ct_bounds[0]), len(bounds[0]))
-    max_yindex = max(len(ct_bounds[1]), len(bounds[1]))
-    max_zindex = max(len(ct_bounds[2]), len(bounds[2]))
-
-    weights = np.array([np.zeros(max_xindex), np.zeros(max_yindex), np.zeros(max_zindex)])
-
-    for (dimension, index) in enumerate(indices):
-        if index[0] == index[1]:
-            # ct low and hi bounds are in same xyz voxel
-            weights[dimension][index[0]] = ct_voxel_size[dimension] / voxel_size[dimension]
-        else:
-            for i in range(index[0], index[1] + 1):
-                if bounds[dimension][i] >= ct_bounds[dimension][ct_ijk[dimension]] and \
-                                bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
-                    # xyz voxel is entirely in ct voxel
-                    weights[dimension][i] = 1.0
-
-                elif bounds[dimension][i] <= ct_bounds[dimension][ct_ijk[dimension]] and \
-                                bounds[dimension][i + 1] <= ct_bounds[dimension][ct_ijk[dimension] + 1]:
-                    # ct voxel straddles the upper bound of the xyz voxel
-                    weights[dimension][i] = (bounds[dimension][i + 1] - ct_bounds[dimension][ct_ijk[dimension]]) / \
-                                            voxel_size[dimension]
-
-                else:
-                    # ct voxel straddles the lower bound of the xyz voxel
-                    weights[dimension][i] = (ct_bounds[dimension][ct_ijk[dimension] + 1] - bounds[dimension][i]) / \
-                                            voxel_size[dimension]
-
-    return weights

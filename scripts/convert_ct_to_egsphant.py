@@ -30,6 +30,7 @@ parser.add_argument('--apply_str', dest='mar', type=int, nargs='*',
                          'threshold and replacement values and the search radius in mm and the number of z slices from '
                          'the seed locations.')
 
+# TODO add option to specify box with 3 or 4 numbers (sizes in x, y, z, and optionally, centre of box)
 parser.add_argument('-c', '--crop', type=float, nargs='*',
                     help='Crop the CT dataset to the (x1, x2, y1, y2, z1, z2) bounds specified (in cm). If a single '
                          'value n is passed, then the set is cropped to a cube of size n at the centre of the dataset')
@@ -112,12 +113,6 @@ if args.mar:
         raise Exception('No DICOM RP plan files were found in directory')
 
 
-if args.crop:
-    if args.verbose:
-        print('Cropping CT dataset...')
-    ctdata = ctd.crop_ctdata_to_bounds(ctdata, args.crop)
-
-
 if args.resample:
     if args.verbose:
         print('Resampling CT dataset...')
@@ -133,6 +128,12 @@ if args.resample:
         ny = int(ny)
         nz = int(nz)
     ctdata = ctr.resample_ctdata(ctdata, (nx, ny, nz), size_or_voxels)
+
+
+if args.crop:
+    if args.verbose:
+        print('Cropping CT dataset...')
+    ctdata = ctd.crop_ctdata_to_bounds(ctdata, args.crop)
 
 
 contours = cts.get_contours_from_dicom(args.directory)

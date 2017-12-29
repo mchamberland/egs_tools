@@ -195,3 +195,7 @@ def tri_linear_interp_dose_xyz(the_dose3d: DoseDistribution, pos: Tuple[float, f
         return dose, abs_unc / dose
     else:
         return 0, 1
+
+# TODO add dose comparison methods, similar to 3ddose_tools.
+# TODO add histogram plotting for comparison methods
+# TODO add pygrace stuff to produce xmgrace plots
