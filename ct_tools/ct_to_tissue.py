@@ -12,19 +12,25 @@ class CTConversionToTissue:
             self.read_ctconv_file(filename)
 
     def read_ctconv_file(self, filename='default'):
-        # TODO check CT number limits and that CT numbers are sorted in ascending order
         if not filename.endswith('.ctconv'):
             filename += '.ctconv'
         path = join(self.directory, filename)
         if not os.path.exists(path):
-            return -1
+            raise FileNotFoundError
 
         with open(path, 'r') as file:
             lines = file.readlines()
             lines = [line.strip() for line in lines if line.strip()]
 
+        previous_max_ctnum = -999999
         for line in lines:
             name, density, min_ctnum, max_ctnum = line.split()
+            if int(min_ctnum) < previous_max_ctnum:
+                raise Exception('Min HU number for {medium} is smaller than max HU number '
+                                'of previous medium.'.format(medium=name))
+            if int(max_ctnum) < int(min_ctnum):
+                raise Exception('Max HU number for {medium} is smaller than min HU number.'.format(medium=name))
+            previous_max_ctnum = int(max_ctnum)
             medium = MediumInfo(name, float(density), int(min_ctnum), int(max_ctnum))
             self.media_list.append(medium)
             self.ctnum_bins.append(int(min_ctnum))
