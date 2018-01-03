@@ -1,13 +1,19 @@
+import os
+from os.path import join
 from scipy.interpolate import interp1d
+
+PATH_TO_CT_CALIBRATION = os.path.expandvars("$CT_CALIBRATION_DIR")
 
 
 class HU2rho:
-    # TODO add directory parameter and read from it
-    def __init__(self, filename=None):
+    def __init__(self, filename, directory=PATH_TO_CT_CALIBRATION):
         self.ct_numbers = []
         self.densities = []
-        if filename:
-            self.load_hu_to_density_calibration(filename)
+        path = join(directory, filename)
+        if os.path.exists(path):
+            self.load_hu_to_density_calibration(path)
+        else:
+            raise FileNotFoundError
 
     def load_hu_to_density_calibration(self, filename):
         with open(filename, 'r') as file:

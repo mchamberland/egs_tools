@@ -59,7 +59,6 @@ class CTConversionToEGSphant:
                 self.density_instruction[contour] = density_instruction
                 self.tissue_converter[contour] = CTConversionToTissue(ctconv)
             else:
-                # TODO read .struct file and store order contours are read in contour_order list
                 pass
 
         temp_media_list = []
