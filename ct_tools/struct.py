@@ -31,10 +31,11 @@ def get_contours_from_dicom(directory='.'):
                 contour_dict[number].colour = [float(v) for v in ROI.ROIDisplayColor]
 
             temp_data = []
-            for zslice in ROI.ContourSequence:
-                points_as_float_in_cm = [float(v) / 10 for v in zslice.ContourData]
-                it = iter(points_as_float_in_cm)
-                temp_data.append(list(zip(it, it, it)))
+            if 'ContourSequence' in ROI:
+                for zslice in ROI.ContourSequence:
+                    points_as_float_in_cm = [float(v) / 10 for v in zslice.ContourData]
+                    it = iter(points_as_float_in_cm)
+                    temp_data.append(list(zip(it, it, it)))
 
             temp_data.sort(key=lambda temp: temp[0][2])  # sort by z-slice
 
