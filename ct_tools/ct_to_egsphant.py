@@ -2,6 +2,7 @@ import os
 import voxelnav
 import numpy as np
 import egsphant.manip as egsphantmanip
+from numba import jit
 from os.path import join
 from collections import defaultdict
 from ct_tools.hu2rho import HU2rho
@@ -97,45 +98,50 @@ class CTConversionToEGSphant:
                 else:
                     egsphant.density[index] = float(self.density_instruction[contour])
         else:
-            loop_counter = 0
-            print_counter = 10
-            n = int(ctdata.nvox() / 10)
-            for (index, value) in ctdata_dict.items():
-                loop_counter += 1
-                if loop_counter % n == 0:
-                    print("{:d}%...".format(print_counter))
-                    print_counter += 10
-
-                ctnum, (x, y), k = value
-                in_structure = None
-                found_structure = False
-                for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
-                    if k in contour_path_dict[name]:
-                        for path in contour_path_dict[name][k]:
-                            if path.contains_point((x, y)):
-                                in_structure = name
-                                found_structure = True
-                                break
-                        if found_structure:
-                            break
-
-                if not found_structure:
-                    in_structure = 'REMAINDER'
-
-                medium = self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)
-                medium_key = egsphant.get_medium_key(medium)
-                egsphant.phantom[index] = medium_key
-
-                if self.density_instruction[in_structure] == 'CT':
-                    egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
-                elif self.density_instruction[in_structure] == 'NOMINAL':
-                    medium_index = self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum)
-                    density = self.tissue_converter[in_structure].get_medium_density(medium_index)
-                    egsphant.density[index] = density
-                else:
-                    egsphant.density[index] = float(self.density_instruction[in_structure])
+            egsphant = self._convert_ct_using_contours(egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate)
 
         print("Conversion completed! (Whew!)")
+        return egsphant
+
+    @jit
+    def _convert_ct_using_contours(self, egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate):
+        loop_counter = 0
+        print_counter = 10
+        n = int(ctdata.nvox() / 10)
+        for (index, value) in ctdata_dict.items():
+            loop_counter += 1
+            if loop_counter % n == 0:
+                print("{:d}%...".format(print_counter))
+                print_counter += 10
+
+            ctnum, (x, y), k = value
+            in_structure = None
+            found_structure = False
+            for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
+                if k in contour_path_dict[name]:
+                    for path in contour_path_dict[name][k]:
+                        if path.contains_point((x, y)):
+                            in_structure = name
+                            found_structure = True
+                            break
+                    if found_structure:
+                        break
+
+            if not found_structure:
+                in_structure = 'REMAINDER'
+
+            medium = self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)
+            medium_key = egsphant.get_medium_key(medium)
+            egsphant.phantom[index] = medium_key
+
+            if self.density_instruction[in_structure] == 'CT':
+                egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
+            elif self.density_instruction[in_structure] == 'NOMINAL':
+                medium_index = self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum)
+                density = self.tissue_converter[in_structure].get_medium_density(medium_index)
+                egsphant.density[index] = density
+            else:
+                egsphant.density[index] = float(self.density_instruction[in_structure])
         return egsphant
 
     def setup_egsphant(self, ctdata):
