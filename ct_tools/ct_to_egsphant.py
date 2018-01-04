@@ -103,7 +103,6 @@ class CTConversionToEGSphant:
         print("Conversion completed! (Whew!)")
         return egsphant
 
-    @jit
     def _convert_ct_using_contours(self, egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate):
         loop_counter = 0
         print_counter = 10
