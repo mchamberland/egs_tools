@@ -102,6 +102,7 @@ class EGSphant:
         self.number_of_media = 0
         self.media = []
         self.medium_keys = dict()
+        self.inverse_key_mapping = dict()
         self.dimensions = []
         self.bounds = [[], [], []]
         self.phantom = np.array([0])
@@ -135,6 +136,7 @@ class EGSphant:
         self.number_of_media = int(lines[0])
         self.media = [medium.strip() for medium in lines[1:self.number_of_media + 1]]
         self.medium_keys = dict(zip(self.MEDIUM_KEY_STRING[:len(self.media)], self.media))
+        self.inverse_key_mapping = dict((v, k) for k, v in self.medium_keys.items())
         self.dimensions = list(map(int, lines[self.number_of_media+2].split()))
         del lines[0:self.number_of_media + 3]
 
@@ -210,6 +212,7 @@ class EGSphant:
         egsphant.number_of_media = 1
         egsphant.media = ['WATER_0.998']
         egsphant.medium_keys = dict([('1', 'WATER_0.998')])
+        egsphant.inverse_key_mapping = dict((v, k) for k, v in egsphant.medium_keys.items())
         egsphant.bounds[0], egsphant.bounds[1], egsphant.bounds[2] = bounds
         egsphant.dimensions.append(len(egsphant.bounds[0]) - 1)
         egsphant.dimensions.append(len(egsphant.bounds[1]) - 1)
@@ -235,8 +238,7 @@ class EGSphant:
         Returns:
             str: medium key
         """
-        inverse_key_mapping = dict((v, k) for k, v in self.medium_keys.items())
-        return inverse_key_mapping[medium]
+        return self.inverse_key_mapping[medium]
 
     def get_index_of_voxels_with_medium(self, medium: str) -> List[int]:
         """Return a list of the 1-D index of the voxels containing 'medium'

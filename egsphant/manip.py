@@ -81,20 +81,19 @@ def replace_original_medium_with_new_medium(the_egsphant: EGSphant, original_med
 
     """
     # Get the key of the original medium, the indices of the voxels to replace, and the density of the medium
-    original_inverse_key_mapping = dict((v, k) for k, v in the_egsphant.medium_keys.items())
-    original_medium_key = original_inverse_key_mapping[original_medium]
+    original_medium_key = the_egsphant.get_medium_key(original_medium)
     voxels_to_replace = [i for i, x in enumerate(the_egsphant.phantom.flatten(order='F')) if x == original_medium_key]
 
     # Figure out if the medium already exists in this egsphant or if it needs to be added
     index = [i for i, m in enumerate(the_egsphant.media) if m == new_medium]
     if len(index) > 0:
-        inverse_key_mapping = dict((v, k) for k, v in the_egsphant.medium_keys.items())
-        medium_key = inverse_key_mapping[new_medium]
+        medium_key = the_egsphant.get_medium_key(new_medium)
     else:
         medium_key = the_egsphant.MEDIUM_KEY_STRING[the_egsphant.number_of_media]
         the_egsphant.number_of_media += 1
         the_egsphant.media.append(new_medium)
         the_egsphant.medium_keys[medium_key] = new_medium
+        the_egsphant.inverse_key_mapping[new_medium] = medium_key
 
     voxels = voxelnav.get_ijk_indexing_array_from_index_list(voxels_to_replace, the_egsphant.dimensions)
     the_egsphant.phantom[voxels] = medium_key
@@ -122,5 +121,6 @@ def add_medium(the_egsphant: EGSphant, medium: str):
         the_egsphant.number_of_media += 1
         the_egsphant.media.append(medium)
         the_egsphant.medium_keys[medium_key] = medium
+        the_egsphant.inverse_key_mapping[medium] = medium_key
 
     return medium_key
