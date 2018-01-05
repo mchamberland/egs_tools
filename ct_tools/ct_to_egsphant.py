@@ -118,6 +118,7 @@ class CTConversionToEGSphant:
             found_structure = False
             for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
                 if k in contour_path_dict[name]:
+                    # TODO check if we should even bother checking the point
                     for path in contour_path_dict[name][k]:
                         if path.contains_point((x, y)):
                             in_structure = name
@@ -129,16 +130,14 @@ class CTConversionToEGSphant:
             if not found_structure:
                 in_structure = 'REMAINDER'
 
-            medium = self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)
-            medium_key = egsphant.get_medium_key(medium)
-            egsphant.phantom[index] = medium_key
+            egsphant.phantom[index] = egsphant.inverse_key_mapping[
+                self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)]
 
             if self.density_instruction[in_structure] == 'CT':
                 egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
             elif self.density_instruction[in_structure] == 'NOMINAL':
-                medium_index = self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum)
-                density = self.tissue_converter[in_structure].get_medium_density(medium_index)
-                egsphant.density[index] = density
+                egsphant.density[index] = self.tissue_converter[in_structure].get_medium_density(
+                    self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum))
             else:
                 egsphant.density[index] = float(self.density_instruction[in_structure])
         return egsphant
@@ -162,14 +161,14 @@ def setup_ctdata_dictionary(ctdata):
     n = int(ctdata.nvox() / 10)
     xybounds = ctdata.bounds[0:2]
     print("Setting up the CT data for conversion...")
+    # TODO do not calculate the pixel centre from ij for EVERY slice! They're the same!
     for (index, ctnum) in np.ndenumerate(ctdata.image):
         i, j, k = index
         loop_counter += 1
         if loop_counter % n == 0:
             print("{:d}%...".format(print_counter))
             print_counter += 10
-        (x, y) = voxelnav.get_pixel_center_from_ij((i, j), xybounds)
-        ctdata_dict[index] = (ctnum, (x, y), k)
+        ctdata_dict[index] = (ctnum, voxelnav.get_pixel_center_from_ij((i, j), xybounds), k)
     print("CT data ready!")
     return ctdata_dict
 

@@ -9,6 +9,7 @@ class HU2rho:
     def __init__(self, filename, directory=PATH_TO_CT_CALIBRATION):
         self.ct_numbers = []
         self.densities = []
+        self.f = None
         path = join(directory, filename)
         if os.path.exists(path):
             self.load_hu_to_density_calibration(path)
@@ -22,17 +23,17 @@ class HU2rho:
             for ctnum, rho in ctnum_rho_pairs:
                 self.ct_numbers.append(float(ctnum))
                 self.densities.append(float(rho))
+            self.f = interp1d(self.ct_numbers, self.densities, fill_value='extrapolate')
 
     def get_density_from_hu(self, ctnum, extrapolate=False):
-        f = interp1d(self.ct_numbers, self.densities, fill_value='extrapolate')
         if extrapolate:
-            density = float(f(ctnum))
+            density = float(self.f(ctnum))
         else:
             if ctnum < self.ct_numbers[0]:
                 ctnum = self.ct_numbers[0]
             elif ctnum > self.ct_numbers[-1]:
                 ctnum = self.ct_numbers[-1]
-            density = float(f(ctnum))
+            density = float(self.f(ctnum))
         if density > 0:
             return density
         else:
