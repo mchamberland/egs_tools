@@ -63,8 +63,10 @@ def copy_medium_from_source_to_destination(medium: str, source: EGSphant, destin
     else:
         for v in voxels_with_medium:
             pos = voxelnav.get_voxel_center_from_index(v, source.bounds)
-            destination.phantom[pos] = medium_key
-            destination.density[pos] = density
+            ijk = voxelnav.get_ijk_from_xyz(pos, destination.bounds)
+            density = source.density[voxelnav.get_ijk_from_index(v, source.dimensions)]
+            destination.phantom[ijk] = medium_key
+            destination.density[ijk] = density
 
 
 def replace_original_medium_with_new_medium(the_egsphant: EGSphant, original_medium: str, new_medium: str,
