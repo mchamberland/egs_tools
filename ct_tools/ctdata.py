@@ -132,9 +132,14 @@ def crop_ctdata_to_bounds(original: CTdata, the_bounds, include_partial_voxel=Fa
     y_index = voxelnav.get_region_indices_from_low_and_hi_pos(yi, yf, original.bounds[1], include_partial_voxel)
     z_index = voxelnav.get_region_indices_from_low_and_hi_pos(zi, zf, original.bounds[2], include_partial_voxel)
 
-    xb_slice = slice(x_index[0], x_index[1] + 2)
-    yb_slice = slice(y_index[0], y_index[1] + 2)
-    zb_slice = slice(z_index[0], z_index[1] + 2)
+    return crop_ctdata_to_voxel_indices(original, (x_index, y_index, z_index))
+
+
+def crop_ctdata_to_voxel_indices(original: CTdata, the_indices) -> CTdata:
+    # TODO check the_indices validity
+    xb_slice = slice(the_indices[0][0], the_indices[0][1] + 2)
+    yb_slice = slice(the_indices[1][0], the_indices[1][1] + 2)
+    zb_slice = slice(the_indices[2][0], the_indices[2][1] + 2)
 
     cropped = CTdata()
 
@@ -142,9 +147,9 @@ def crop_ctdata_to_bounds(original: CTdata, the_bounds, include_partial_voxel=Fa
     cropped.bounds[1] = original.bounds[1][yb_slice]
     cropped.bounds[2] = original.bounds[2][zb_slice]
 
-    x_slice = slice(x_index[0], x_index[1] + 1)
-    y_slice = slice(y_index[0], y_index[1] + 1)
-    z_slice = slice(z_index[0], z_index[1] + 1)
+    x_slice = slice(the_indices[0][0], the_indices[0][1] + 1)
+    y_slice = slice(the_indices[1][0], the_indices[1][1] + 1)
+    z_slice = slice(the_indices[2][0], the_indices[2][1] + 1)
 
     cropped.image = original.image[x_slice, y_slice, z_slice]
 
