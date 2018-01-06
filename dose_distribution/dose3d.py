@@ -8,9 +8,15 @@ DoseDistribution -- dose distribution from a 3ddose file
 """
 import os
 import gzip
+import pydicom
+from os.path import join
 from typing import Tuple
 import numpy as np
 import voxelnav
+import value_mapping as vmap
+
+EGS_TOOLS_HOME = os.path.expandvars("$EGS_TOOLS_HOME")
+EMPTY_DICOM_TEMPLATE = "RT_Dose_template.dcm"
 
 
 class DoseDistribution:
@@ -213,3 +219,31 @@ class DoseDistribution:
         z_slice = slice(z_index[0], z_index[1] + 1)
 
         return self.dose[x_slice, y_slice, z_slice], self.fract_unc[x_slice, y_slice, z_slice]
+
+
+def write_3ddose_to_dicom(the_dose: DoseDistribution, dicom_file=None):
+    if dicom_file:
+        dicom = pydicom.read_file(dicom_file)
+    else:
+        path = join(join(EGS_TOOLS_HOME, "templates"), EMPTY_DICOM_TEMPLATE)
+        dicom = pydicom.read_file(path)
+
+    dicom.ImagePositionPatient = [str(i) for i in voxelnav.get_voxel_center_from_ijk((0, 0, 0), the_dose.bounds)]
+    dicom.NumberOfFrames = str(the_dose.dimensions[2])
+    dicom.Rows = the_dose.dimensions[1]
+    dicom.Columns = the_dose.dimensions[0]
+
+    dx, dy, dz = voxelnav.get_voxel_size_from_ijk((0, 0, 0), the_dose.bounds)
+
+    dicom.PixelSpacing = [str(dx * 10), str(dy * 10)]
+    dicom.GridFrameOffsetVector = [str(i * dz * 10) for i in range(0, the_dose.dimensions[2])]
+
+    dose_max = the_dose.dose.max()
+    num_bytes = 4
+    float2int = vmap.FloatingPointToIntegerMapping(0., dose_max, num_bytes, mode='bytes')
+
+    dicom.DoseGridScaling = str(float2int.reverse_mapping_factor)
+    dose_array_in_int = float2int.float_to_integer(the_dose.dose).astype('uint32')
+    dicom.PixelData = dose_array_in_int.tostring()
+
+    return dicom
