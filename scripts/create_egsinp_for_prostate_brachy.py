@@ -6,7 +6,7 @@ from shutil import copyfile
 import argparse
 import egsinp.egsinp as egsinp
 from egsinp.egsinp import EGSinp
-import brachy_dicom.reader as bdr
+import dicom.reader as bdr
 
 
 parser = argparse.ArgumentParser(description='Create an egs_brachy input file based on a DICOM plan file and a '

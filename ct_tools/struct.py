@@ -1,6 +1,6 @@
 import voxelnav
 import numpy as np
-import brachy_dicom.reader as bdr
+import dicom.reader as bdr
 from typing import List
 from scipy.spatial import cKDTree
 from matplotlib.path import Path

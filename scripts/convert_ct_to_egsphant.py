@@ -8,7 +8,7 @@ import ct_tools.ctdata as ctd
 import ct_tools.artifact as cta
 import ct_tools.resample as ctr
 import ct_tools.ct_to_egsphant as cte
-import brachy_dicom.reader as bdr
+import dicom.reader as bdr
 
 
 parser = argparse.ArgumentParser(description='Convert a DICOM CT dataset to the EGSnrc egsphant format.')

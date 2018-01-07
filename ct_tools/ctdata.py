@@ -12,7 +12,7 @@ import sys
 import gzip
 import voxelnav
 import numpy as np
-import brachy_dicom.reader as bdr
+import dicom.reader as bdr
 from typing import List, Tuple
 
 
