@@ -14,6 +14,7 @@ from typing import Tuple
 import numpy as np
 import voxelnav
 import value_mapping as vmap
+import dicom.uid
 
 EGS_TOOLS_HOME = os.path.expandvars("$EGS_TOOLS_HOME")
 EMPTY_DICOM_TEMPLATE = "RT_Dose_template.dcm"
@@ -223,27 +224,32 @@ class DoseDistribution:
 
 def write_3ddose_to_dicom(the_dose: DoseDistribution, dicom_file=None):
     if dicom_file:
-        dicom = pydicom.read_file(dicom_file)
+        dicom_dataset = pydicom.read_file(dicom_file)
     else:
         path = join(join(EGS_TOOLS_HOME, "templates"), EMPTY_DICOM_TEMPLATE)
-        dicom = pydicom.read_file(path)
+        dicom_dataset = pydicom.read_file(path)
+        sop, study, series, frame = dicom.uid.generate_new_uids()
+        dicom_dataset.SOPInstanceUID = sop
+        dicom_dataset.StudyInstanceUID = study
+        dicom_dataset.SeriesInstanceUID = series
+        dicom_dataset.FrameOfReferenceUID = frame
 
-    dicom.ImagePositionPatient = [str(i) for i in voxelnav.get_voxel_center_from_ijk((0, 0, 0), the_dose.bounds)]
-    dicom.NumberOfFrames = str(the_dose.dimensions[2])
-    dicom.Rows = the_dose.dimensions[1]
-    dicom.Columns = the_dose.dimensions[0]
+    dicom_dataset.ImagePositionPatient = [str(i) for i in voxelnav.get_voxel_center_from_ijk((0, 0, 0), the_dose.bounds)]
+    dicom_dataset.NumberOfFrames = str(the_dose.dimensions[2])
+    dicom_dataset.Rows = the_dose.dimensions[1]
+    dicom_dataset.Columns = the_dose.dimensions[0]
 
     dx, dy, dz = voxelnav.get_voxel_size_from_ijk((0, 0, 0), the_dose.bounds)
 
-    dicom.PixelSpacing = [str(dx * 10), str(dy * 10)]
-    dicom.GridFrameOffsetVector = [str(i * dz * 10) for i in range(0, the_dose.dimensions[2])]
+    dicom_dataset.PixelSpacing = [str(dx * 10), str(dy * 10)]
+    dicom_dataset.GridFrameOffsetVector = [str(i * dz * 10) for i in range(0, the_dose.dimensions[2])]
 
     dose_max = the_dose.dose.max()
     num_bytes = 4
     float2int = vmap.FloatingPointToIntegerMapping(0., dose_max, num_bytes, mode='bytes')
 
-    dicom.DoseGridScaling = str(float2int.reverse_mapping_factor)
+    dicom_dataset.DoseGridScaling = str(float2int.reverse_mapping_factor)
     dose_array_in_int = float2int.float_to_integer(the_dose.dose).astype('uint32')
-    dicom.PixelData = dose_array_in_int.tostring()
+    dicom_dataset.PixelData = dose_array_in_int.tostring()
 
-    return dicom
+    return dicom_dataset

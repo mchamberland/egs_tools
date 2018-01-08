@@ -16,13 +16,13 @@ class DicomUIDGenerator:
         return self.create_uid(self.root + '.1.3')
 
     def create_sop_instance_uid(self):
-        return self.create_uid(self.root + '1.4')
+        return self.create_uid(self.root + '.1.4')
 
     def create_study_instance_uid(self):
-        return self.create_uid(self.root + '1.2')
+        return self.create_uid(self.root + '.1.2')
 
     def create_frame_of_reference_uid(self):
-        return self.create_uid(self.root + '1.5')
+        return self.create_uid(self.root + '.1.5')
 
     def create_uid(self, uid):
         uid = uid + '.' + str(os.getpid())
@@ -30,3 +30,13 @@ class DicomUIDGenerator:
         uid = uid + '.' + now
         self.uid_counter += 1
         return uid + '.' + str(self.uid_counter)
+
+
+def generate_new_uids():
+    generator = DicomUIDGenerator()
+    sop = generator.create_sop_instance_uid()
+    study = generator.create_study_instance_uid()
+    series = generator.create_series_instance_uid()
+    frame = generator.create_frame_of_reference_uid()
+
+    return sop, study, series, frame
