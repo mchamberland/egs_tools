@@ -10,7 +10,7 @@ import ct_tools.resample as ctr
 import ct_tools.ct_to_egsphant as cte
 import dicom.reader as bdr
 import dicom.rtdose as rtd
-import egsinp.egsinp as egsinp
+
 
 parser = argparse.ArgumentParser(description='Convert a DICOM CT dataset to the EGSnrc egsphant format.')
 
@@ -131,15 +131,25 @@ if args.match:
         ctdata = ctr.resample_ctdata(ctdata, (dose.dx / 10, dose.dy / 10, dose.dz / 10), 'size')
         if args.verbose:
             print('Now cropping CT dataset...')
-        xi, xf, yi, yf, zi, zf = dose.grid_extents
-        dx, dy, dz = args.match
-        xi = xi / 10 - dx
-        xf = xf / 10 + dx
-        yi = yi / 10 - dy
-        yf = yf / 10 + dy
-        zi = zi / 10 - dz
-        zf = zf / 10 + dz
-        ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf))
+        dx, dy, dz = dose.grid_extents
+        xi, xf = dx
+        yi, yf = dy
+        if dose.z_direction == -1:
+            zf, zi = dz
+        else:
+            zi, zf = dz
+        tx, ty, tz = args.match
+        xi = xi / 10 - tx
+        xf = xf / 10 + tx
+        yi = yi / 10 - ty
+        yf = yf / 10 + ty
+        zi = zi / 10 - tz
+        zf = zf / 10 + tz
+        if any(args.match):
+            ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf))
+        else:
+            ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf), include_partial_voxel=True)
+
     else:
         raise Exception('No DICOM RT dose files were found in directory')
 
