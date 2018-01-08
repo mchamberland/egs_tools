@@ -121,6 +121,35 @@ class CTdata:
         file.write(image_str)
         file.close()
 
+    def print_info(self, save_to_file=None):
+        if save_to_file:
+            file = open(save_to_file + '.ctdata_info', 'w')
+        else:
+            file = sys.stdout
+        dx, dy, dz = self.voxel_size_in_cm()
+        dx = dx * 10
+        dy = dy * 10
+        dz = dz * 10
+        nx, ny, nz = self.dimensions
+        ct_size = (self.bounds[0][-1] - self.bounds[0][0],
+                   self.bounds[1][-1] - self.bounds[1][0],
+                   self.bounds[2][-1] - self.bounds[2][0])
+        centre = (self.bounds[0][0] + ct_size[0] / 2,
+                  self.bounds[1][0] + ct_size[1] / 2,
+                  self.bounds[2][0] + ct_size[2] / 2)
+
+        print("CT dimensions (voxels):\n{} x {} x {}\n".format(nx, ny, nz), file=file)
+        print("Voxel size:\n{} mm x {} mm x {} mm\n".format(dx, dy, dz), file=file)
+        print("Extents of image:", file=file)
+        print("{:.3f} cm to {:.3f} cm along x.".format(self.bounds[0][0], self.bounds[0][-1]), file=file)
+        print("{:.3f} cm to {:.3f} cm along y.".format(self.bounds[1][0], self.bounds[1][-1]), file=file)
+        print("{:.3f} cm to {:.3f} cm along z.\n".format(self.bounds[2][0], self.bounds[2][-1]), file=file)
+        print("Centre of image:\n({:.2f} cm, {:.2f} cm, {:.2f} cm)\n".format(centre[0], centre[1], centre[2]),
+              file=file)
+        print("Total size of image:\n{:.2f} cm x {:.2f} cmx {:.2f} cm\n".format(ct_size[0],
+                                                                                ct_size[1],
+                                                                                ct_size[2]), file=file)
+
 
 def crop_ctdata_to_bounds(original: CTdata, the_bounds, include_partial_voxel=False) -> CTdata:
     if len(the_bounds) > 1:
