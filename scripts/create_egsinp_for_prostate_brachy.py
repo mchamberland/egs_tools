@@ -76,7 +76,8 @@ if plans:
         ctdata = ctd.get_ctdata_from_dicom(args.directory)
         sx, sy, sz = ctdata.image_size_in_cm()
         cx, cy, cz = ctdata.image_centre_in_cm()
-        egsinp.create_box_of_uniform_medium(base_name, (sx, sy, sz), args.box, (cx, cy, cz))
+        # we pad the z-bounds slightly, to avoid overlapping boundaries with the egsphant
+        egsinp.create_box_of_uniform_medium(base_name, (sx, sy, sz + 1.e-5), args.box, (cx, cy, cz))
         input_file.geometry(box=base_name, egsphant=base_name, transformations=transformations)
     else:
         input_file.geometry(egsphant=base_name, transformations=transformations)

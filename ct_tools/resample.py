@@ -16,9 +16,9 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_voxe
     else:
         raise Exception("Argument 'size_or_count' must be either 'size' or 'voxels'.")
     print("Resampling CT data...")
-    print("Requested voxel size in cm: ({:.4f}, {:.4f}, {:.4f})".format(voxel_size_in_cm[0],
-                                                                        voxel_size_in_cm[1],
-                                                                        voxel_size_in_cm[2]))
+    print("Requested voxel size:\n{:.4f} mm x {:.4f} mm x {:.4f} mm\n".format(voxel_size_in_cm[0] * 10,
+                                                                              voxel_size_in_cm[1] * 10,
+                                                                              voxel_size_in_cm[2] * 10))
 
     check_requested_voxel_size(ct.image_size_in_cm(), voxel_size_in_cm)
     dimensions, adjusted_voxel_size = adjust_requested_voxel_size(ct.image_size_in_cm(), voxel_size_in_cm)
@@ -47,18 +47,18 @@ def adjust_requested_voxel_size(ct_image_size, voxel_size):
     dimensions = [int(ct_image_size[i] / v) for (i, v) in enumerate(voxel_size)]
     adjusted_voxel_size = [float(ct_image_size[i] / n) for (i, n) in enumerate(dimensions)]
 
-    print("Adjusted dimensions (in cm) so that an integer number of voxels fit exactly on the CT data:")
-    print("New voxel size in cm: ({:.4f}, {:.4f}, {:.4f})".format(adjusted_voxel_size[0],
-                                                                  adjusted_voxel_size[1],
-                                                                  adjusted_voxel_size[2]))
-    print("New number of voxels: ({:d}, {:d}, {:d})".format(dimensions[0],
-                                                            dimensions[1],
-                                                            dimensions[2]))
+    print("Adjusted dimensions so that an integer number of voxels fit exactly on the CT data:\n")
+    print("New voxel size:\n{:.4f} mm x {:.4f} mm x {:.4f} mm\n".format(adjusted_voxel_size[0] * 10,
+                                                                        adjusted_voxel_size[1] * 10,
+                                                                        adjusted_voxel_size[2] * 10))
+    print("New number of voxels:\n{:d} x {:d} x {:d}\n".format(dimensions[0],
+                                                               dimensions[1],
+                                                               dimensions[2]))
     return dimensions, adjusted_voxel_size
 
 
 def calculate_new_bounds(ct_bounds, voxel_size, dimensions):
-    print("Calculating new bounds...")
+    print("Calculating new bounds...\n")
     return [[ct_bounds[i][0] + j * voxel_size[i] for j in range(dimensions[i] + 1)] for i in range(3)]
 
 

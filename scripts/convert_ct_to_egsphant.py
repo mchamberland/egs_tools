@@ -75,7 +75,7 @@ else:
     base_name = os.path.basename(args.directory)
 
 if args.verbose:
-    print('Reading CT dataset...')
+    print('Reading CT dataset...\n')
 if not args.input_ctdata:
     ctdata = ctd.get_ctdata_from_dicom(args.directory)
 else:
@@ -84,7 +84,7 @@ else:
 
 if args.apply_default_str:
     if args.verbose:
-        print('Applying metal artifact reduction...')
+        print('Applying metal artifact reduction...\n')
     plan_filenames, plans = bdr.read_plan_files_in_directory(args.directory)
     if plans:
         seed_locations = bdr.get_seed_locations_in_mm(plans[0]) / 10
@@ -124,13 +124,14 @@ if args.mar:
 if args.match:
     dose_filenames, doses = bdr.read_dose_files_in_directory(args.directory)
     if doses:
-        if args.verbose:
-            print('Matching the dimensions and resolution to the dose grid...')
-            print('First, resampling CT dataset...')
         dose = rtd.RTDoseInfo(doses[0])
+        if args.verbose:
+            print('Matching the dimensions and resolution to the dose grid...\n')
+            print('Dose grid description:')
+            dose.print_info()
         ctdata = ctr.resample_ctdata(ctdata, (dose.dx / 10, dose.dy / 10, dose.dz / 10), 'size')
         if args.verbose:
-            print('Now cropping CT dataset...')
+            print('Now cropping CT dataset...\n')
         dx, dy, dz = dose.grid_extents
         xi, xf = dx
         yi, yf = dy
@@ -149,7 +150,9 @@ if args.match:
             ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf))
         else:
             ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf), include_partial_voxel=True)
-
+        print('Modified CT dataset description:')
+        ctdata.print_info()
+        print()
     else:
         raise Exception('No DICOM RT dose files were found in directory')
 
