@@ -9,7 +9,8 @@ import ct_tools.artifact as cta
 import ct_tools.resample as ctr
 import ct_tools.ct_to_egsphant as cte
 import dicom.reader as bdr
-
+import dicom.rtdose as rtd
+import egsinp.egsinp as egsinp
 
 parser = argparse.ArgumentParser(description='Convert a DICOM CT dataset to the EGSnrc egsphant format.')
 
@@ -38,6 +39,13 @@ parser.add_argument('-c', '--crop', type=float, nargs='*',
 parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
                          'the size is specified in cm (''size'') or in voxels (''voxels'').')
+
+parser.add_argument('-m', '--match_dose_grid', dest='match', type=float, nargs=3,
+                    help='The CT dataset will be resampled and cropped to match the dose grid within (tx, ty, tz).'
+                         'For example, -m 1 -1.2 0 will resample the CT data to match the voxel size of the dose'
+                         'grid. Then, it will crop the dataset to within 1 cm of the x-bounds of the dose grid;'
+                         'it will crop an extra 1.2 cm along y (i.e., the cropped data will be shorter in y);'
+                         'and it will crop to match exactly the z-bounds.')
 
 parser.add_argument('-w', '--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
@@ -111,6 +119,29 @@ if args.mar:
         artifact_reduction.apply_str_to_seed_locations(ctdata, seed_locations)
     else:
         raise Exception('No DICOM RP plan files were found in directory')
+
+
+if args.match:
+    dose_filenames, doses = bdr.read_dose_files_in_directory(args.directory)
+    if doses:
+        if args.verbose:
+            print('Matching the dimensions and resolution to the dose grid...')
+            print('First, resampling CT dataset...')
+        dose = rtd.RTDoseInfo(doses[0])
+        ctdata = ctr.resample_ctdata(ctdata, (dose.dx / 10, dose.dy / 10, dose.dz / 10), 'size')
+        if args.verbose:
+            print('Now cropping CT dataset...')
+        xi, xf, yi, yf, zi, zf = dose.grid_extents
+        dx, dy, dz = args.match
+        xi = xi / 10 - dx
+        xf = xf / 10 + dx
+        yi = yi / 10 - dy
+        yf = yf / 10 + dy
+        zi = zi / 10 - dz
+        zf = zf / 10 + dz
+        ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf))
+    else:
+        raise Exception('No DICOM RT dose files were found in directory')
 
 
 if args.resample:

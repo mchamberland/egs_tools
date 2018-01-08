@@ -82,20 +82,23 @@ class CTdata:
         return nvox
 
     def voxel_size_in_cm(self) -> (float, float, float):
-        dx = self.bounds[0][1] - self.bounds[0][0]
-        dy = self.bounds[1][1] - self.bounds[1][0]
-        dz = self.bounds[2][1] - self.bounds[2][0]
-        return dx, dy, dz
+        return (self.bounds[0][1] - self.bounds[0][0],
+                self.bounds[1][1] - self.bounds[1][0],
+                self.bounds[2][1] - self.bounds[2][0])
 
     def image_size_in_cm(self) -> (float, float, float):
-        dx = self.bounds[0][-1] - self.bounds[0][0]
-        dy = self.bounds[1][-1] - self.bounds[1][0]
-        dz = self.bounds[2][-1] - self.bounds[2][0]
-        return dx, dy, dz
+        return (self.bounds[0][-1] - self.bounds[0][0],
+                self.bounds[1][-1] - self.bounds[1][0],
+                self.bounds[2][-1] - self.bounds[2][0])
+
+    def image_centre_in_cm(self) -> (float, float, float):
+        image_size = self.image_size_in_cm()
+        return (self.bounds[0][0] + image_size[0] / 2,
+                self.bounds[1][0] + image_size[1] / 2,
+                self.bounds[2][0] + image_size[2] / 2)
 
     def get_ct_number_from_xyz(self, pos: Tuple[float, float, float]) -> float:
-        index = voxelnav.get_ijk_from_xyz(pos, self.bounds)
-        return self.image[index]
+        return self.image[voxelnav.get_ijk_from_xyz(pos, self.bounds)]
 
     def write_to_file(self, filename="image.ctdata"):
         if not (filename.endswith('.ctdata') or filename.endswith('.ctdata.gz')):
@@ -130,9 +133,7 @@ class CTdata:
         dy = dy * 10
         dz = dz * 10
         nx, ny, nz = self.dimensions
-        ct_size = (self.bounds[0][-1] - self.bounds[0][0],
-                   self.bounds[1][-1] - self.bounds[1][0],
-                   self.bounds[2][-1] - self.bounds[2][0])
+        ct_size = self.image_size_in_cm()
         centre = (self.bounds[0][0] + ct_size[0] / 2,
                   self.bounds[1][0] + ct_size[1] / 2,
                   self.bounds[2][0] + ct_size[2] / 2)

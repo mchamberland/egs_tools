@@ -7,6 +7,7 @@ import argparse
 import egsinp.egsinp as egsinp
 from egsinp.egsinp import EGSinp
 import dicom.reader as bdr
+import ct_tools.ctdata as ctd
 
 
 parser = argparse.ArgumentParser(description='Create an egs_brachy input file based on a DICOM plan file and a '
@@ -21,6 +22,10 @@ parser.add_argument('-n', '--nhist',
 
 parser.add_argument('-c', '--copy_egsphant_to_egs_brachy_lib', dest='copy_egsphant', action='store_true',
                     help='Copy the egsphant to the egs_brachy/lib/geometry/phantoms/egsphant/ folder.')
+
+parser.add_argument('-b', '--box_of_uniform_medium', dest='box', type=str,
+                    help='A box of uniform medium (specified) in which the egsphant will be inscribed. The box matches'
+                         'the dimensions and location of the CT dataset, by default. The medium needs to be specified.')
 
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='Increase verbosity.')
@@ -67,7 +72,14 @@ if plans:
         input_file.run_control()
     input_file.run_mode()
     input_file.media_definition()
-    input_file.geometry(egsphant=base_name, transformations=transformations)
+    if args.box:
+        ctdata = ctd.get_ctdata_from_dicom(args.directory)
+        sx, sy, sz = ctdata.image_size_in_cm()
+        cx, cy, cz = ctdata.image_centre_in_cm()
+        egsinp.create_box_of_uniform_medium(base_name, (sx, sy, sz), args.box, (cx, cy, cz))
+        input_file.geometry(box=base_name, egsphant=base_name, transformations=transformations)
+    else:
+        input_file.geometry(egsphant=base_name, transformations=transformations)
     input_file.source_volume_correction()
     input_file.source(transformations=transformations)
     input_file.scoring_options(rakr=rakr, muen_file='brachy_xcom_1.5MeV_egsphant.muendat', muen_for_media=media_list)
@@ -80,4 +92,4 @@ if plans:
     copyfile(join(args.directory, base_name + '.egsinp'), join(root_egs_brachy, base_name + '.egsinp'))
 
 else:
-    raise Exception('No DICOM RP plan files were found in directory')
+    raise Exception('No DICOM RT plan files were found in directory')

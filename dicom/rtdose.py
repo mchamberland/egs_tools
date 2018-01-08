@@ -9,6 +9,7 @@ class RTDoseInfo:
         self.dx, self.dy = self.get_pixel_size()
         self.dz = float(dicom.GridFrameOffsetVector[1])
         self.z_direction = 1 if self.dz > 0 else -1
+        self.dz = abs(self.dz)
         self.nx, self.ny, self.nz = self.get_dimensions()
         self.centre_of_first_pixel = self.get_centre_of_first_pixel()
         self.first_slice_position = float(dicom.ImagePositionPatient[2])
@@ -30,11 +31,11 @@ class RTDoseInfo:
     def get_grid_extents(self):
         x_initial = self.centre_of_first_pixel[0] - self.dx / 2
         y_initial = self.centre_of_first_pixel[1] - self.dy / 2
-        z_initial = self.first_slice_position - self.dz / 2
+        z_initial = self.first_slice_position - self.z_direction * self.dz / 2
 
         x_final = x_initial + self.nx * self.dx
         y_final = y_initial + self.ny * self.dy
-        z_final = z_initial + self.nz * self.dz
+        z_final = z_initial + self.nz * self.z_direction * self.dz
 
         return (x_initial, x_final), (y_initial, y_final), (z_initial, z_final)
 
@@ -60,7 +61,7 @@ class RTDoseInfo:
         else:
             file = sys.stdout
         print("Dose grid dimensions (voxels):\n{} x {} x {}\n".format(self.nx, self.ny, self.nz), file=file)
-        print("Voxel size:\n{} mm x {} mm x {} mm\n".format(self.dx, self.dy, abs(self.dz)), file=file)
+        print("Voxel size:\n{} mm x {} mm x {} mm\n".format(self.dx, self.dy, self.dz), file=file)
         print("Extents of dose grid:", file=file)
         print("{:.3f} cm to {:.3f} cm along x.".format(self.grid_extents[0][0] / 10, self.grid_extents[0][1] / 10),
               file=file)
