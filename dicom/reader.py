@@ -9,7 +9,6 @@ SOURCE_MODELS = {'I-125 (6711) [TG43 updated]': 'OncoSeed_6711',
                  'I-125(AgX100)': 'AgX100'}
 
 
-# TODO Create light dicom dose class that can print info about itself
 def list_all_files_in_directory(directory='.'):
     return [f for f in listdir(directory) if isfile(join(directory, f))]
 
