@@ -77,7 +77,7 @@ if plans:
         sx, sy, sz = ctdata.image_size_in_cm()
         cx, cy, cz = ctdata.image_centre_in_cm()
         # we pad the z-bounds slightly, to avoid overlapping boundaries with the egsphant
-        egsinp.create_box_of_uniform_medium(base_name, (sx, sy, sz + 1.e-5), args.box, (cx, cy, cz))
+        egsinp.create_box_of_uniform_medium(base_name, (sx, sy, sz + 1.e-2), args.box, (cx, cy, cz))
         input_file.geometry(box=base_name, egsphant=base_name, transformations=transformations)
     else:
         input_file.geometry(egsphant=base_name, transformations=transformations)

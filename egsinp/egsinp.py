@@ -61,15 +61,15 @@ class EGSinp:
             self.root = os.path.join(os.path.expandvars("$EGS_HOME"), 'egs_brachy/')
         self.input_file = open(filename + '.egsinp', 'w')
 
-    def run_control(self, ncase=1e6, nbatch=1, nchunk=1, calculation='first', geometry_error_limit=2500,
-                    egsdat_file_format='gzip'):
+    def run_control(self, ncase=1e6, nbatch=1, nchunk=1, calculation='first',
+                    geometry_error_limit_fraction_of_ncase=0.01, egsdat_file_format='gzip'):
         start_delimiter = ":start run control:"
         stop_delimiter = ":stop run control:"
         ncase_str = "ncase = {:.0E}".format(ncase)
         nbatch_str = "nbatch = {}".format(nbatch)
         nchunk_str = "nchunk = {}".format(nchunk)
         calc_str = "calculation = {}".format(calculation)
-        geom_error_str = "geometry error limit = {}".format(geometry_error_limit)
+        geom_error_str = "geometry error limit = {}".format(geometry_error_limit_fraction_of_ncase * ncase)
         egsdat_str = "egsdat file format = {}".format(egsdat_file_format)
 
         input_block = "\n{0}{t1}{1}{t1}{2}{t1}{3}{t1}{4}{t1}{5}{t1}{6}\n{7}\n".format(start_delimiter,
