@@ -30,6 +30,7 @@ class CTframe:
         self.pixel_array = np.swapaxes(ct_file.pixel_array, 0, 1)
 
 
+# TODO have a function to describe/print CT info (voxel size, image size, bounds, centre)
 class CTdata:
     def __init__(self, ctframes: List[CTframe]=None):
         if ctframes:
