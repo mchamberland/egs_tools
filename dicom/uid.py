@@ -21,6 +21,9 @@ class DicomUIDGenerator:
     def create_study_instance_uid(self):
         return self.create_uid(self.root + '1.2')
 
+    def create_frame_of_reference_uid(self):
+        return self.create_uid(self.root + '1.5')
+
     def create_uid(self, uid):
         uid = uid + '.' + str(os.getpid())
         now = dt.datetime.strftime(dt.datetime.today(), "%Y%m%d%H%M%f")
