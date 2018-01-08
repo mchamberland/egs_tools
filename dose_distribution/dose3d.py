@@ -15,6 +15,7 @@ import numpy as np
 import voxelnav
 import value_mapping as vmap
 import dicom.uid
+import random
 
 EGS_TOOLS_HOME = os.path.expandvars("$EGS_TOOLS_HOME")
 EMPTY_DICOM_TEMPLATE = "RT_Dose_template.dcm"
@@ -225,6 +226,8 @@ class DoseDistribution:
 def write_3ddose_to_dicom(the_dose: DoseDistribution, dicom_file=None):
     if dicom_file:
         dicom_dataset = pydicom.read_file(dicom_file)
+        dicom_dataset.SOPInstanceUID += "{:03d}".format(random.randint(1, 1000))
+        dicom_dataset.SeriesInstanceUID += "{:03d}".format(random.randint(1, 1000))
     else:
         path = join(join(EGS_TOOLS_HOME, "templates"), EMPTY_DICOM_TEMPLATE)
         dicom_dataset = pydicom.read_file(path)
