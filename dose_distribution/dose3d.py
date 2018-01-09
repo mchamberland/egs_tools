@@ -237,7 +237,8 @@ def write_3ddose_to_dicom(the_dose: DoseDistribution, dicom_file=None):
         dicom_dataset.SeriesInstanceUID = series
         dicom_dataset.FrameOfReferenceUID = frame
 
-    dicom_dataset.ImagePositionPatient = [str(i) for i in voxelnav.get_voxel_center_from_ijk((0, 0, 0), the_dose.bounds)]
+    dicom_dataset.ImagePositionPatient = [str(i * 10) for i in voxelnav.get_voxel_center_from_ijk((0, 0, 0),
+                                                                                                  the_dose.bounds)]
     dicom_dataset.NumberOfFrames = str(the_dose.dimensions[2])
     dicom_dataset.Rows = the_dose.dimensions[1]
     dicom_dataset.Columns = the_dose.dimensions[0]
@@ -253,6 +254,7 @@ def write_3ddose_to_dicom(the_dose: DoseDistribution, dicom_file=None):
 
     dicom_dataset.DoseGridScaling = str(float2int.reverse_mapping_factor)
     dose_array_in_int = float2int.float_to_integer(the_dose.dose).astype('uint32')
-    dicom_dataset.PixelData = dose_array_in_int.tostring()
+    dose_array = np.swapaxes(dose_array_in_int, 0, 2)  # in dicom, arrays are stored as [z][y][x] with x fastest moving
+    dicom_dataset.PixelData = dose_array.tostring()
 
     return dicom_dataset
