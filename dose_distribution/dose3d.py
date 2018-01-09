@@ -226,12 +226,11 @@ class DoseDistribution:
 def write_3ddose_to_dicom(the_dose: DoseDistribution, dicom_file=None):
     if dicom_file:
         dicom_dataset = pydicom.read_file(dicom_file)
-        dicom_dataset.SOPInstanceUID += "{:03d}".format(random.randint(1, 1000))
         dicom_dataset.SeriesInstanceUID += "{:03d}".format(random.randint(1, 1000))
     else:
         path = join(join(EGS_TOOLS_HOME, "templates"), EMPTY_DICOM_TEMPLATE)
         dicom_dataset = pydicom.read_file(path)
-        sop, study, series, frame = dicom.uid.generate_new_uids()
+        sop, study, series, frame = dicom.uid.generate_new_uids('rtdose')
         dicom_dataset.SOPInstanceUID = sop
         dicom_dataset.StudyInstanceUID = study
         dicom_dataset.SeriesInstanceUID = series
