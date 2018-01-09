@@ -1,4 +1,4 @@
-#!/home/mchamber/venvs/py-3.6/bin/python
+#!/home/mchamber/anaconda3/bin/python
 import sys
 import os
 from os.path import join
@@ -26,6 +26,9 @@ parser.add_argument('-c', '--copy_egsphant_to_egs_brachy_lib', dest='copy_egspha
 parser.add_argument('-b', '--box_of_uniform_medium', dest='box', type=str,
                     help='A box of uniform medium (specified) in which the egsphant will be inscribed. The box matches'
                          'the dimensions and location of the CT dataset, by default. The medium needs to be specified.')
+
+parser.add_argument('--volume-correction', dest='volcor', type=str,
+                    help='The source volume correction option: "correct", "none", or "zero dose".')
 
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='Increase verbosity.')
@@ -81,7 +84,10 @@ if plans:
         input_file.geometry(box=base_name, egsphant=base_name, transformations=transformations)
     else:
         input_file.geometry(egsphant=base_name, transformations=transformations)
-    input_file.source_volume_correction()
+    if args.volcor:
+        input_file.source_volume_correction(correction=args.volcor)
+    else:
+        input_file.source_volume_correction(correction='zero dose')
     input_file.source(transformations=transformations)
     input_file.scoring_options(rakr=rakr, muen_file='brachy_xcom_1.5MeV_egsphant.muendat', muen_for_media=media_list)
     input_file.variance_reduction()

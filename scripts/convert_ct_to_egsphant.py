@@ -1,4 +1,4 @@
-#!/home/mchamber/venvs/py-3.6/bin/python
+#!/home/mchamber/anaconda3/bin/python
 import sys
 import os
 import argparse
