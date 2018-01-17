@@ -16,7 +16,7 @@ class DicomUIDGenerator:
         if dicom_type in DICOM_SOP_UID:
             self.sop = DICOM_SOP_UID[dicom_type]
         else:
-            self.sop = None
+            self.sop = GENERIC_ROOT_UID
         self.root = GENERIC_ROOT_UID
         self.uid_counter = 0
 
@@ -24,7 +24,7 @@ class DicomUIDGenerator:
         return self.create_uid(self.root + '.1.3')
 
     def create_sop_instance_uid(self):
-        return self.create_uid(self.root + '.1.4')
+        return self.create_uid(self.sop)
 
     def create_study_instance_uid(self):
         return self.create_uid(self.root + '.1.2')
@@ -42,10 +42,7 @@ class DicomUIDGenerator:
 
 def generate_new_uids(dicom_type=None):
     generator = DicomUIDGenerator(dicom_type)
-    if generator.sop:
-        sop = generator.sop
-    else:
-        sop = generator.create_sop_instance_uid()
+    sop = generator.create_sop_instance_uid()
     study = generator.create_study_instance_uid()
     series = generator.create_series_instance_uid()
     frame = generator.create_frame_of_reference_uid()
