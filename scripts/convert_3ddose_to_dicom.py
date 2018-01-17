@@ -1,4 +1,3 @@
-import sys
 import os
 import argparse
 import dose_distribution.dose3d as dd
@@ -31,3 +30,4 @@ if args.dicom:
         print('DICOM file not found. Using a dummy template DICOM file instead.')
 
 dicom = dd.write_3ddose_to_dicom(dose, template, args.flipz)
+dicom.save_as(args.dose + '.dcm')
