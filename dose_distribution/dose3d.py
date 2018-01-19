@@ -94,6 +94,9 @@ class DoseDistribution:
         Returns
             (numpy.ndarray, numpy.ndarray): dose and its fractional uncertainty
         """
+        if not (filename.endswith('.3ddose') or filename.endswith('.3ddose.gz')):
+            filename += '.3ddose'
+
         if not os.path.exists(filename):
             raise FileNotFoundError
 
