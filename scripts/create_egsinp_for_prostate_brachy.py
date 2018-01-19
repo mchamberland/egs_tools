@@ -10,6 +10,21 @@ import dicom.reader as bdr
 import ct_tools.ctdata as ctd
 
 
+def read_seed_locations(filename):
+    if not os.path.exists(filename):
+        raise FileNotFoundError
+
+    seed_locations_in_mm = []
+    with open(filename) as file:
+        lines = [line for line in file.readlines()]
+
+        for line in lines:
+            pos = [float(v)*10 for v in line.split()]
+            seed_locations_in_mm.append(pos)
+
+    return seed_locations_in_mm
+
+
 parser = argparse.ArgumentParser(description='Create an egs_brachy input file based on a DICOM plan file and a '
                                              'CT-based egsphant.')
 
@@ -26,6 +41,12 @@ parser.add_argument('-c', '--copy_egsphant_to_egs_brachy_lib', dest='copy_egspha
 parser.add_argument('-b', '--box_of_uniform_medium', dest='box', type=str,
                     help='A box of uniform medium (specified) in which the egsphant will be inscribed. The box matches'
                          'the dimensions and location of the CT dataset, by default. The medium needs to be specified.')
+
+parser.add_argument('-s', '--seed_locations', dest='seed_locations', type=str,
+                    help='A file containing the seed locations (x, y, z coordinates in cm; 1 per line).')
+
+parser.add_argument('-r', '--rakr', dest='rakr', type=float,
+                    help='The Reference Air-Kerma Rate (RAKR) of the seeds, in units of micro-gray per hour at 1 m.')
 
 parser.add_argument('--volume-correction', dest='volcor', type=str,
                     help='The source volume correction option: "correct", "none", or "zero dose".')
@@ -58,7 +79,10 @@ input_file = EGSinp(filename=join(args.directory, base_name), path_type='absolut
 plan_filenames, plans = bdr.read_plan_files_in_directory(args.directory)
 if plans:
     plan = plans[0]
-    seed_locations = bdr.get_seed_locations_in_mm(plan)
+    if args.seed_locations:
+        seed_locations = read_seed_locations(args.seed_locations)
+    else:
+        seed_locations = bdr.get_seed_locations_in_mm(plan)
     rakr = bdr.get_rakr_in_ugy_per_h_at_1m(plan)
     source_model = bdr.get_source_model(plan)
 
@@ -100,3 +124,5 @@ if plans:
 
 else:
     raise Exception('No DICOM RT plan files were found in directory')
+
+
