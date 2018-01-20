@@ -43,6 +43,19 @@ def get_pixel_center_from_ij(index2d: Tuple[int, int], bounds2d: List[List[float
     return tuple((bounds2d[d][i] + bounds2d[d][i + 1]) / 2. for d, i in enumerate(index2d))
 
 
+def get_all_pixel_centers(bounds2d: List[List[float]]):
+    """Return a list of the coordinates of the center of all pixels
+
+    Args:
+        bounds2d (list[list[float]]): list of list of the bounds of each pixel in each dimension
+
+    Returns:
+        list[tuple[float]]: list of coordinates (x,y) of the center of every pixel
+    """
+    return [get_pixel_center_from_ij((i, j), bounds2d) for j in range(len(bounds2d[1]) - 1)
+            for i in range(len(bounds2d[0]) - 1)]
+
+
 def get_voxel_size_from_ijk(index3d: Tuple[int, int, int], bounds3d: List[List[float]]):
     """Return the size of the rectilinear voxel specified by its multi-dimensional index
 

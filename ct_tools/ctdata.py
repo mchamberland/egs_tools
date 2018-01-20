@@ -41,6 +41,7 @@ class CTdata:
             self.dimensions = [0, 0, 0]
             self.bounds = [[], [], []]
             self.image = np.array([])
+        self.pixel_centre_coordinates = self.calculate_pixel_centre_coordinates()
 
     @staticmethod
     def get_bounds(ctframes: List[CTframe]) -> List[List[float]]:
@@ -99,6 +100,10 @@ class CTdata:
 
     def get_ct_number_from_xyz(self, pos: Tuple[float, float, float]) -> float:
         return self.image[voxelnav.get_ijk_from_xyz(pos, self.bounds)]
+
+    def calculate_pixel_centre_coordinates(self):
+        return np.array(voxelnav.get_all_pixel_centers(self.bounds[0:2]),
+                        dtype='float,float').reshape(self.dimensions[0:2], order='F')
 
     def write_to_file(self, filename="image.ctdata"):
         if not (filename.endswith('.ctdata') or filename.endswith('.ctdata.gz')):
