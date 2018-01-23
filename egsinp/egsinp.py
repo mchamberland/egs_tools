@@ -61,15 +61,15 @@ class EGSinp:
             self.root = os.path.join(os.path.expandvars("$EGS_HOME"), 'egs_brachy/')
         self.input_file = open(filename + '.egsinp', 'w')
 
-    def run_control(self, ncase=1e6, nbatch=1, nchunk=1, calculation='first', geometry_error_limit=2500,
-                    egsdat_file_format='gzip'):
+    def run_control(self, ncase=1e6, nbatch=1, nchunk=1, calculation='first',
+                    geometry_error_limit_fraction_of_ncase=0.01, egsdat_file_format='gzip'):
         start_delimiter = ":start run control:"
         stop_delimiter = ":stop run control:"
         ncase_str = "ncase = {:.0E}".format(ncase)
         nbatch_str = "nbatch = {}".format(nbatch)
         nchunk_str = "nchunk = {}".format(nchunk)
         calc_str = "calculation = {}".format(calculation)
-        geom_error_str = "geometry error limit = {}".format(geometry_error_limit)
+        geom_error_str = "geometry error limit = {}".format(geometry_error_limit_fraction_of_ncase * ncase)
         egsdat_str = "egsdat file format = {}".format(egsdat_file_format)
 
         input_block = "\n{0}{t1}{1}{t1}{2}{t1}{3}{t1}{4}{t1}{5}{t1}{6}\n{7}\n".format(start_delimiter,
@@ -537,3 +537,84 @@ def create_seed_transformations_file(seed_locations, filename="seed_locations", 
             seed_location = ', '.join(map(str, location))
             translation_str = translation_root + seed_location + "\n"
             file.write(start_str + translation_str + stop_str)
+
+
+def create_box_of_uniform_medium(filename, dimensions, medium, centre=None, place_in_egs_brachy_lib=True):
+    if place_in_egs_brachy_lib:
+        lib_path = "egs_brachy/lib/geometry/phantoms/"
+        root = os.path.expandvars("$EGS_HOME")
+        the_path = os.path.join(root, lib_path)
+    else:
+        the_path = ""
+
+    full_path = os.path.join(the_path, filename + ".geom")
+
+    t1 = "\n\t"
+    t2 = "\n\t\t"
+    t3 = "\n\t\t\t"
+
+    start_geom_def = ":start geometry definition:"
+    start_geom = ":start geometry:"
+    stop_geom = ":stop geometry:"
+    stop_geom_def = ":stop geometry definition:"
+    start_media = ":start media input:"
+    media = "media = {}".format(medium)
+    stop_media = ":stop media input:"
+    library = "library = egs_box"
+    box_size = "box size = {} {} {}".format(dimensions[0], dimensions[1], dimensions[2])
+
+    simulation_geom = "simulation geometry = the_box"
+
+    if centre:
+        name = "name = box_origin"
+        name_transformed = "name = the_box"
+        library_transf = "library = egs_gtransformed"
+        my_geom = "my geometry = box_origin"
+        start_transf = ":start transformation:"
+        translation = "translation = {} {} {}".format(centre[0], centre[1], centre[2])
+        stop_transf = ":stop transformation:"
+
+        input_block = "{0}{t1}{1}{t2}{2}{t2}{3}{t2}{4}{t2}{5}{t3}{6}{t2}{7}{t1}{8}\n" \
+                      "{t1}{9}{t2}{10}{t2}{11}{t2}{12}{t2}{13}{t3}{14}{t2}{15}{t1}{16}\n" \
+                      "{t1}{17}\n{18}".format(start_geom_def,
+                                              start_geom,
+                                              name,
+                                              library,
+                                              box_size,
+                                              start_media,
+                                              media,
+                                              stop_media,
+                                              stop_geom,
+                                              start_geom,
+                                              name_transformed,
+                                              library_transf,
+                                              my_geom,
+                                              start_transf,
+                                              translation,
+                                              stop_transf,
+                                              stop_geom,
+                                              simulation_geom,
+                                              stop_geom_def,
+                                              t1=t1,
+                                              t2=t2,
+                                              t3=t3)
+    else:
+        name = "name = the_box"
+        input_block = "{0}{t1}{1}{t2}{2}{t2}{3}{t2}{4}{t2}{5}{t3}{6}{t2}{7}{t1}{8}\n" \
+                      "{t1}{9}\n{10}".format(start_geom_def,
+                                             start_geom,
+                                             name,
+                                             library,
+                                             box_size,
+                                             start_media,
+                                             media,
+                                             stop_media,
+                                             stop_geom,
+                                             simulation_geom,
+                                             stop_geom_def,
+                                             t1=t1,
+                                             t2=t2,
+                                             t3=t3)
+
+    with open(full_path, 'w') as file:
+        file.write(input_block)

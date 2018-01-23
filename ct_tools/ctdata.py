@@ -12,7 +12,7 @@ import sys
 import gzip
 import voxelnav
 import numpy as np
-import brachy_dicom.reader as bdr
+import dicom.reader as bdr
 from typing import List, Tuple
 
 
@@ -41,6 +41,7 @@ class CTdata:
             self.dimensions = [0, 0, 0]
             self.bounds = [[], [], []]
             self.image = np.array([])
+        self.pixel_centre_coordinates = self.calculate_pixel_centre_coordinates()
 
     @staticmethod
     def get_bounds(ctframes: List[CTframe]) -> List[List[float]]:
@@ -82,20 +83,27 @@ class CTdata:
         return nvox
 
     def voxel_size_in_cm(self) -> (float, float, float):
-        dx = self.bounds[0][1] - self.bounds[0][0]
-        dy = self.bounds[1][1] - self.bounds[1][0]
-        dz = self.bounds[2][1] - self.bounds[2][0]
-        return dx, dy, dz
+        return (self.bounds[0][1] - self.bounds[0][0],
+                self.bounds[1][1] - self.bounds[1][0],
+                self.bounds[2][1] - self.bounds[2][0])
 
     def image_size_in_cm(self) -> (float, float, float):
-        dx = self.bounds[0][-1] - self.bounds[0][0]
-        dy = self.bounds[1][-1] - self.bounds[1][0]
-        dz = self.bounds[2][-1] - self.bounds[2][0]
-        return dx, dy, dz
+        return (self.bounds[0][-1] - self.bounds[0][0],
+                self.bounds[1][-1] - self.bounds[1][0],
+                self.bounds[2][-1] - self.bounds[2][0])
+
+    def image_centre_in_cm(self) -> (float, float, float):
+        image_size = self.image_size_in_cm()
+        return (self.bounds[0][0] + image_size[0] / 2,
+                self.bounds[1][0] + image_size[1] / 2,
+                self.bounds[2][0] + image_size[2] / 2)
 
     def get_ct_number_from_xyz(self, pos: Tuple[float, float, float]) -> float:
-        index = voxelnav.get_ijk_from_xyz(pos, self.bounds)
-        return self.image[index]
+        return self.image[voxelnav.get_ijk_from_xyz(pos, self.bounds)]
+
+    def calculate_pixel_centre_coordinates(self):
+        return np.array(voxelnav.get_all_pixel_centers(self.bounds[0:2]),
+                        dtype='float,float').reshape(self.dimensions[0:2], order='F')
 
     def write_to_file(self, filename="image.ctdata"):
         if not (filename.endswith('.ctdata') or filename.endswith('.ctdata.gz')):
@@ -119,6 +127,33 @@ class CTdata:
             image_str += '\n'
         file.write(image_str)
         file.close()
+
+    def print_info(self, save_to_file=None):
+        if save_to_file:
+            file = open(save_to_file + '.ctdata_info', 'w')
+        else:
+            file = sys.stdout
+        dx, dy, dz = self.voxel_size_in_cm()
+        dx = dx * 10
+        dy = dy * 10
+        dz = dz * 10
+        nx, ny, nz = self.dimensions
+        ct_size = self.image_size_in_cm()
+        centre = (self.bounds[0][0] + ct_size[0] / 2,
+                  self.bounds[1][0] + ct_size[1] / 2,
+                  self.bounds[2][0] + ct_size[2] / 2)
+
+        print("CT dimensions (voxels):\n{} x {} x {}\n".format(nx, ny, nz), file=file)
+        print("Voxel size:\n{} mm x {} mm x {} mm\n".format(dx, dy, dz), file=file)
+        print("Extents of image:", file=file)
+        print("{:.3f} cm to {:.3f} cm along x.".format(self.bounds[0][0], self.bounds[0][-1]), file=file)
+        print("{:.3f} cm to {:.3f} cm along y.".format(self.bounds[1][0], self.bounds[1][-1]), file=file)
+        print("{:.3f} cm to {:.3f} cm along z.\n".format(self.bounds[2][0], self.bounds[2][-1]), file=file)
+        print("Centre of image:\n({:.2f} cm, {:.2f} cm, {:.2f} cm)\n".format(centre[0], centre[1], centre[2]),
+              file=file)
+        print("Total size of image:\n{:.2f} cm x {:.2f} cmx {:.2f} cm\n".format(ct_size[0],
+                                                                                ct_size[1],
+                                                                                ct_size[2]), file=file)
 
 
 def crop_ctdata_to_bounds(original: CTdata, the_bounds, include_partial_voxel=False) -> CTdata:

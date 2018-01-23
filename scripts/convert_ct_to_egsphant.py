@@ -1,4 +1,4 @@
-#!/home/mchamber/venvs/py-3.6/bin/python
+#!/home/mchamber/anaconda3/bin/python
 import sys
 import os
 import argparse
@@ -8,7 +8,8 @@ import ct_tools.ctdata as ctd
 import ct_tools.artifact as cta
 import ct_tools.resample as ctr
 import ct_tools.ct_to_egsphant as cte
-import brachy_dicom.reader as bdr
+import dicom.reader as bdr
+import dicom.rtdose as rtd
 
 
 parser = argparse.ArgumentParser(description='Convert a DICOM CT dataset to the EGSnrc egsphant format.')
@@ -39,6 +40,13 @@ parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
                          'the size is specified in cm (''size'') or in voxels (''voxels'').')
 
+parser.add_argument('-m', '--match_dose_grid', dest='match', type=float, nargs=3,
+                    help='The CT dataset will be resampled and cropped to match the dose grid within (tx, ty, tz).'
+                         'For example, -m 1 -1.2 0 will resample the CT data to match the voxel size of the dose'
+                         'grid. Then, it will crop the dataset to within 1 cm of the x-bounds of the dose grid;'
+                         'it will crop an extra 1.2 cm along y (i.e., the cropped data will be shorter in y);'
+                         'and it will crop to match exactly the z-bounds.')
+
 parser.add_argument('-w', '--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
 
@@ -67,7 +75,7 @@ else:
     base_name = os.path.basename(args.directory)
 
 if args.verbose:
-    print('Reading CT dataset...')
+    print('Reading CT dataset...\n')
 if not args.input_ctdata:
     ctdata = ctd.get_ctdata_from_dicom(args.directory)
 else:
@@ -76,7 +84,7 @@ else:
 
 if args.apply_default_str:
     if args.verbose:
-        print('Applying metal artifact reduction...')
+        print('Applying metal artifact reduction...\n')
     plan_filenames, plans = bdr.read_plan_files_in_directory(args.directory)
     if plans:
         seed_locations = bdr.get_seed_locations_in_mm(plans[0]) / 10
@@ -111,6 +119,42 @@ if args.mar:
         artifact_reduction.apply_str_to_seed_locations(ctdata, seed_locations)
     else:
         raise Exception('No DICOM RP plan files were found in directory')
+
+
+if args.match:
+    dose_filenames, doses = bdr.read_dose_files_in_directory(args.directory)
+    if doses:
+        dose = rtd.RTDoseInfo(doses[0])
+        if args.verbose:
+            print('Matching the dimensions and resolution to the dose grid...\n')
+            print('Dose grid description:')
+            dose.print_info()
+        ctdata = ctr.resample_ctdata(ctdata, (dose.dx / 10, dose.dy / 10, dose.dz / 10), 'size')
+        if args.verbose:
+            print('Now cropping CT dataset...\n')
+        dx, dy, dz = dose.grid_extents
+        xi, xf = dx
+        yi, yf = dy
+        if dose.z_direction == -1:
+            zf, zi = dz
+        else:
+            zi, zf = dz
+        tx, ty, tz = args.match
+        xi = xi / 10 - tx
+        xf = xf / 10 + tx
+        yi = yi / 10 - ty
+        yf = yf / 10 + ty
+        zi = zi / 10 - tz
+        zf = zf / 10 + tz
+        if any(args.match):
+            ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf))
+        else:
+            ctdata = ctd.crop_ctdata_to_bounds(ctdata, (xi, xf, yi, yf, zi, zf), include_partial_voxel=True)
+        print('Modified CT dataset description:')
+        ctdata.print_info()
+        print()
+    else:
+        raise Exception('No DICOM RT dose files were found in directory')
 
 
 if args.resample:
