@@ -153,6 +153,20 @@ class CTConversionToEGSphant:
 
         return egsphant
 
+    def setup_contour_masks(self, ctdata, contour_info_dict):
+        contour_path_dict = defaultdict(dict)
+        zbounds = ctdata.bounds[2]
+        for name, contour in contour_info_dict.items():
+            for zslice in contour.zslices:
+                k = voxelnav.get_index_from_position(zslice, zbounds)
+                if k not in contour_path_dict:
+                    contour_path_dict[name][k] = [contour_info_dict[name].contour_as_path[round(zslice, 4)]]
+                else:
+                    contour_path_dict[name][k].append(contour_info_dict[name].contour_as_path[round(zslice, 4)])
+
+        print("Contour data ready!")
+        return contour_path_dict
+
 
 def setup_ctdata_dictionary(ctdata):
     ctdata_dict = {}
@@ -188,3 +202,5 @@ def setup_contour_path_dictionary(ctdata, contour_info_dict):
 
     print("Contour data ready!")
     return contour_path_dict
+
+
