@@ -124,5 +124,3 @@ if plans:
 
 else:
     raise Exception('No DICOM RT plan files were found in directory')
-
-
