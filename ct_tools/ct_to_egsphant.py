@@ -98,6 +98,8 @@ class CTConversionToEGSphant:
                 else:
                     egsphant.density[index] = float(self.density_instruction[contour])
         else:
+            masks = self.setup_contour_masks(ctdata, contour_path_dict)
+
             egsphant = self._convert_ct_using_contours(egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate)
 
         print("Conversion completed! (Whew!)")
@@ -153,19 +155,26 @@ class CTConversionToEGSphant:
 
         return egsphant
 
-    def setup_contour_masks(self, ctdata, contour_info_dict):
-        contour_path_dict = defaultdict(dict)
-        zbounds = ctdata.bounds[2]
-        for name, contour in contour_info_dict.items():
-            for zslice in contour.zslices:
-                k = voxelnav.get_index_from_position(zslice, zbounds)
-                if k not in contour_path_dict:
-                    contour_path_dict[name][k] = [contour_info_dict[name].contour_as_path[round(zslice, 4)]]
-                else:
-                    contour_path_dict[name][k].append(contour_info_dict[name].contour_as_path[round(zslice, 4)])
+    def setup_contour_masks(self, ctdata, contour_path_dict):
+        contour_mask_dict = defaultdict(dict)
+        total_cumulative_mask = np.zeros(ctdata.dimensions, dtype=bool, order='F')
+        for name, contour_path in contour_path_dict.items():
+            mask_array = total_cumulative_mask
+            for k in range(ctdata.dimensions[2]):
+                if k in contour_path:
+                    temp_cumulative_mask = np.zeros(ctdata.dimensions[0:2], dtype=bool, order='F')
+                    for path in contour_path_dict[name][k]:
+                        temp_mask = path.contains_points(ctdata.pixel_centre_coordinates)
+                        temp_cumulative_mask = temp_cumulative_mask | temp_mask
+                    mask_array[:, :, k] = temp_cumulative_mask
+            contour_mask_dict[name] = mask_array
+            total_cumulative_mask = total_cumulative_mask | mask_array
 
-        print("Contour data ready!")
-        return contour_path_dict
+        contour_mask_dict['REMAINDER'] = np.invert(total_cumulative_mask)
+
+        # tackle structure priorities now...
+
+        return contour_mask_dict
 
 
 def setup_ctdata_dictionary(ctdata):
