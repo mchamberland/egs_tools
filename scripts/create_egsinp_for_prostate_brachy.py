@@ -83,7 +83,10 @@ if plans:
         seed_locations = read_seed_locations(args.seed_locations)
     else:
         seed_locations = bdr.get_seed_locations_in_mm(plan)
-    rakr = bdr.get_rakr_in_ugy_per_h_at_1m(plan)
+    if args.rakr:
+        rakr = args.rakr
+    else:
+        rakr = bdr.get_rakr_in_ugy_per_h_at_1m(plan)
     source_model = bdr.get_source_model(plan)
 
     egsinp.create_seed_transformations_file(seed_locations, filename=base_name, convert_to_cm=True,
