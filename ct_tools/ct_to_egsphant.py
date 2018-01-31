@@ -173,6 +173,9 @@ class CTConversionToEGSphant:
         contour_mask_dict['REMAINDER'] = np.invert(total_cumulative_mask)
 
         # tackle structure priorities now...
+        total_cumulative_mask = np.zeros(ctdata.dimensions, dtype=bool, order='F')
+        for name in self.contour_order[1:-1]: # nothing to do for first and last contours (last is REMAINDER)
+
 
         return contour_mask_dict
 
