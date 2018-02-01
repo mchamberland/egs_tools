@@ -241,6 +241,7 @@ def read_ctdata(filename):
     image = [float(values) for row in lines for values in row.split()]
     ctdata.image = np.array(image)
     ctdata.image = ctdata.image.reshape(ctdata.dimensions, order='F')
+    ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
 
     del lines
     return ctdata
