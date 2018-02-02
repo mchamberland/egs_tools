@@ -165,7 +165,8 @@ class CTConversionToEGSphant:
                     temp_cumulative_mask = np.zeros(ctdata.dimensions[0:2], dtype=bool, order='F')
                     for path in contour_path_dict[name][k]:
                         temp_mask = path.contains_points(ctdata.pixel_centre_coordinates)
-                        temp_cumulative_mask = temp_cumulative_mask | temp_mask
+                        temp_cumulative_mask = temp_cumulative_mask | temp_mask.reshape(ctdata.dimensions[0:2],
+                                                                                        order='F')
                     mask_array[:, :, k] = temp_cumulative_mask
             contour_mask_dict[name] = mask_array
             total_cumulative_mask = total_cumulative_mask | mask_array
