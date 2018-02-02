@@ -98,11 +98,16 @@ class CTConversionToEGSphant:
                 else:
                     egsphant.density[index] = float(self.density_instruction[contour])
         else:
-            masks = self.setup_contour_masks(ctdata, contour_path_dict)
-
+            mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
+            egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
             egsphant = self._convert_ct_using_contours(egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate)
 
         print("Conversion completed! (Whew!)")
+        return egsphant
+
+    def _convert_using_contour_masks(self, egsphant, ctdata, mask_dict, extrapolate):
+
+
         return egsphant
 
     def _convert_ct_using_contours(self, egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate):
