@@ -103,7 +103,7 @@ class CTdata:
 
     def calculate_pixel_centre_coordinates(self):
         return np.array(voxelnav.get_all_pixel_centers(self.bounds[0:2]),
-                        dtype='float,float').reshape(self.dimensions[0:2], order='F')
+                        dtype='float,float')
 
     def write_to_file(self, filename="image.ctdata"):
         if not (filename.endswith('.ctdata') or filename.endswith('.ctdata.gz')):
