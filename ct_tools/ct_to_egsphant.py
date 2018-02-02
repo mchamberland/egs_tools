@@ -1,8 +1,8 @@
 import os
 import voxelnav
 import numpy as np
+import pandas as pd
 import egsphant.manip as egsphantmanip
-from numba import jit
 from os.path import join
 from collections import defaultdict
 from ct_tools.hu2rho import HU2rho
@@ -132,6 +132,9 @@ class CTConversionToEGSphant:
             if not found_structure:
                 in_structure = 'REMAINDER'
 
+            # TODO convert egsphant.inverse_key_mapping to Pandas Series
+            # TODO Can find egsphant medium key by using flattened mask as index to Series
+            # TODO result needs to be converted to list (tolist()) then to ndarray
             egsphant.phantom[index] = egsphant.inverse_key_mapping[
                 self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)]
 
