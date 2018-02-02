@@ -175,7 +175,7 @@ class CTConversionToEGSphant:
 
         # tackle structure priorities now...
         total_cumulative_mask = contour_mask_dict[self.contour_order[0]]
-        for name in self.contour_order[1:-1]: # nothing to do for first and last contours (last is REMAINDER)
+        for name in self.contour_order[1:-1]:  # nothing to do for first and last contours (last is REMAINDER)
             contour_mask_dict[name] = contour_mask_dict[name] ^ (total_cumulative_mask & contour_mask_dict[name])
             total_cumulative_mask = total_cumulative_mask | contour_mask_dict[name]
 
