@@ -8,6 +8,7 @@ import egsinp.egsinp as egsinp
 from egsinp.egsinp import EGSinp
 import dicom.reader as bdr
 import ct_tools.ctdata as ctd
+import numpy as np
 
 
 def read_seed_locations(filename):
@@ -22,7 +23,7 @@ def read_seed_locations(filename):
             pos = [float(v)*10 for v in line.split()]
             seed_locations_in_mm.append(pos)
 
-    return seed_locations_in_mm
+    return np.array(seed_locations_in_mm)
 
 
 parser = argparse.ArgumentParser(description='Create an egs_brachy input file based on a DICOM plan file and a '
