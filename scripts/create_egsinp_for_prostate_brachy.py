@@ -81,7 +81,7 @@ plan_filenames, plans = bdr.read_plan_files_in_directory(args.directory)
 if plans:
     plan = plans[0]
     if args.seed_locations:
-        seed_locations = read_seed_locations(args.seed_locations)
+        seed_locations = read_seed_locations(join(args.directory, args.seed_locations))
     else:
         seed_locations = bdr.get_seed_locations_in_mm(plan)
     if args.rakr:
