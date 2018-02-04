@@ -38,3 +38,14 @@ class HU2rho:
             return density
         else:
             return 0
+
+    def get_densities_from_hu(self, ctnum, extrapolate=False):
+        if extrapolate:
+            densities = self.f(ctnum)
+        else:
+            ctnum[ctnum < self.ct_numbers[0]] = self.ct_numbers[0]
+            ctnum[ctnum > self.ct_numbers[-1]] = self.ct_numbers[-1]
+            densities = self.f(ctnum)
+            densities[densities < 0] = 0
+
+        return densities

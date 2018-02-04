@@ -70,7 +70,6 @@ class CTConversionToEGSphant:
 
     def convert_to_egsphant(self, ctdata, extrapolate=False):
         egsphant = self.setup_egsphant(ctdata)
-        ctdata_dict = setup_ctdata_dictionary(ctdata)
         contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
 
         print("Converting CT data to egsphant. This may take a while...")
@@ -100,14 +99,30 @@ class CTConversionToEGSphant:
         else:
             mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
-            egsphant = self._convert_ct_using_contours(egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate)
 
         print("Conversion completed! (Whew!)")
         return egsphant
 
     def _convert_using_contour_masks(self, egsphant, ctdata, mask_dict, extrapolate):
+        medium_key_mapping = pd.Series(egsphant.inverse_key_mapping)
+        flat_phantom = egsphant.phantom.flatten(order='F')
+        flat_density = egsphant.density.flatten(order='F')
+        flat_image = ctdata.image.flatten(order='F')
+        for contour, mask in mask_dict.items():
+            flat_mask = mask.flatten(order='F')
+            medium = self.tissue_converter[contour].get_medium_name_from_ctnum(flat_image[flat_mask])
+            flat_phantom[flat_mask] = np.array(medium_key_mapping[medium].tolist())
 
+            if self.density_instruction[contour] == 'CT':
+                flat_density[flat_mask] = self.density_converter.get_densities_from_hu(flat_image[flat_mask],
+                                                                                       extrapolate)
+            elif self.density_instruction[contour] == 'NOMINAL':
+                flat_density[flat_mask] = np.array(self.tissue_converter[contour].media_density_series[medium].tolist())
+            else:
+                flat_density[flat_mask] = float(self.density_instruction[contour])
 
+        egsphant.phantom = flat_phantom.reshape(ctdata.dimensions, order='F')
+        egsphant.density = flat_density.reshape(ctdata.dimensions, order='F')
         return egsphant
 
     def _convert_ct_using_contours(self, egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate):
