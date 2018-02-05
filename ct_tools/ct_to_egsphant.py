@@ -73,6 +73,7 @@ class CTConversionToEGSphant:
         contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
 
         print("Converting CT data to egsphant. This may take a while...")
+        # TODO use same approach as the masks for this case
         # easy case: no contours, use REMAINDER
         if not self.contour_info_dictionary:
             contour = 'REMAINDER'
@@ -123,48 +124,6 @@ class CTConversionToEGSphant:
 
         egsphant.phantom = flat_phantom.reshape(ctdata.dimensions, order='F')
         egsphant.density = flat_density.reshape(ctdata.dimensions, order='F')
-        return egsphant
-
-    def _convert_ct_using_contours(self, egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate):
-        loop_counter = 0
-        print_counter = 10
-        n = int(ctdata.nvox() / 10)
-        for (index, value) in ctdata_dict.items():
-            loop_counter += 1
-            if loop_counter % n == 0:
-                print("{:d}%...".format(print_counter))
-                print_counter += 10
-
-            ctnum, (x, y), k = value
-            in_structure = None
-            found_structure = False
-            for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
-                if k in contour_path_dict[name]:
-                    # TODO check if we should even bother checking the point
-                    for path in contour_path_dict[name][k]:
-                        if path.contains_point((x, y)):
-                            in_structure = name
-                            found_structure = True
-                            break
-                    if found_structure:
-                        break
-
-            if not found_structure:
-                in_structure = 'REMAINDER'
-
-            # TODO convert egsphant.inverse_key_mapping to Pandas Series
-            # TODO Can find egsphant medium key by using flattened mask as index to Series
-            # TODO result needs to be converted to list (tolist()) then to ndarray
-            egsphant.phantom[index] = egsphant.inverse_key_mapping[
-                self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)]
-
-            if self.density_instruction[in_structure] == 'CT':
-                egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
-            elif self.density_instruction[in_structure] == 'NOMINAL':
-                egsphant.density[index] = self.tissue_converter[in_structure].get_medium_density(
-                    self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum))
-            else:
-                egsphant.density[index] = float(self.density_instruction[in_structure])
         return egsphant
 
     def setup_egsphant(self, ctdata):
