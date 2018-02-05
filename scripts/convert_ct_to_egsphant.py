@@ -153,6 +153,7 @@ if args.match:
         print('Modified CT dataset description:')
         ctdata.print_info()
         print()
+        ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
     else:
         raise Exception('No DICOM RT dose files were found in directory')
 
@@ -172,12 +173,14 @@ if args.resample:
         ny = int(ny)
         nz = int(nz)
     ctdata = ctr.resample_ctdata(ctdata, (nx, ny, nz), size_or_voxels)
+    ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
 
 
 if args.crop:
     if args.verbose:
         print('Cropping CT dataset...')
     ctdata = ctd.crop_ctdata_to_bounds(ctdata, args.crop)
+    ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
 
 
 contours = cts.get_contours_from_dicom(args.directory)
