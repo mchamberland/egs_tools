@@ -6,6 +6,8 @@ from scipy.spatial import cKDTree
 from matplotlib.path import Path
 
 
+# TODO should use shapely instead of matplotlib.path
+# TODO should also store bounding box for each contour on each slice, to avoid having to check so many points
 def get_contours_from_dicom(directory='.'):
     filenames, rt_structs = bdr.read_structure_files_in_directory(directory)
     if len(rt_structs) > 1:
@@ -53,7 +55,10 @@ def get_contours_from_dicom(directory='.'):
 
     contour_dict_by_label = {}
     for (key, value) in contour_dict.items():
-        contour_dict_by_label[contour_dict[key].name] = contour_dict[key]
+        if contour_dict[key].type == 'BRACHY_CHANNEL':
+            pass
+        else:
+            contour_dict_by_label[contour_dict[key].name] = contour_dict[key]
 
     return contour_dict_by_label
 

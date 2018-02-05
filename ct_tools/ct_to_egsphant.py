@@ -1,8 +1,8 @@
 import os
 import voxelnav
 import numpy as np
+import pandas as pd
 import egsphant.manip as egsphantmanip
-from numba import jit
 from os.path import join
 from collections import defaultdict
 from ct_tools.hu2rho import HU2rho
@@ -70,10 +70,10 @@ class CTConversionToEGSphant:
 
     def convert_to_egsphant(self, ctdata, extrapolate=False):
         egsphant = self.setup_egsphant(ctdata)
-        ctdata_dict = setup_ctdata_dictionary(ctdata)
         contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
 
         print("Converting CT data to egsphant. This may take a while...")
+        # TODO use same approach as the masks for this case
         # easy case: no contours, use REMAINDER
         if not self.contour_info_dictionary:
             contour = 'REMAINDER'
@@ -98,49 +98,32 @@ class CTConversionToEGSphant:
                 else:
                     egsphant.density[index] = float(self.density_instruction[contour])
         else:
-            egsphant = self._convert_ct_using_contours(egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate)
+            mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
+            egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
 
         print("Conversion completed! (Whew!)")
         return egsphant
 
-    def _convert_ct_using_contours(self, egsphant, ctdata, ctdata_dict, contour_path_dict, extrapolate):
-        loop_counter = 0
-        print_counter = 10
-        n = int(ctdata.nvox() / 10)
-        for (index, value) in ctdata_dict.items():
-            loop_counter += 1
-            if loop_counter % n == 0:
-                print("{:d}%...".format(print_counter))
-                print_counter += 10
+    def _convert_using_contour_masks(self, egsphant, ctdata, mask_dict, extrapolate):
+        medium_key_mapping = pd.Series(egsphant.inverse_key_mapping)
+        flat_phantom = egsphant.phantom.flatten(order='F')
+        flat_density = egsphant.density.flatten(order='F')
+        flat_image = ctdata.image.flatten(order='F')
+        for contour, mask in mask_dict.items():
+            flat_mask = mask.flatten(order='F')
+            medium = self.tissue_converter[contour].get_medium_name_from_ctnum(flat_image[flat_mask])
+            flat_phantom[flat_mask] = np.array(medium_key_mapping[medium].tolist())
 
-            ctnum, (x, y), k = value
-            in_structure = None
-            found_structure = False
-            for name in self.contour_order[0:-1]:  # last contour is 'REMAINDER'
-                if k in contour_path_dict[name]:
-                    for path in contour_path_dict[name][k]:
-                        if path.contains_point((x, y)):
-                            in_structure = name
-                            found_structure = True
-                            break
-                    if found_structure:
-                        break
-
-            if not found_structure:
-                in_structure = 'REMAINDER'
-
-            medium = self.tissue_converter[in_structure].get_medium_name_from_ctnum(ctnum)
-            medium_key = egsphant.get_medium_key(medium)
-            egsphant.phantom[index] = medium_key
-
-            if self.density_instruction[in_structure] == 'CT':
-                egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
-            elif self.density_instruction[in_structure] == 'NOMINAL':
-                medium_index = self.tissue_converter[in_structure].get_medium_index_from_ctnum(ctnum)
-                density = self.tissue_converter[in_structure].get_medium_density(medium_index)
-                egsphant.density[index] = density
+            if self.density_instruction[contour] == 'CT':
+                flat_density[flat_mask] = self.density_converter.get_densities_from_hu(flat_image[flat_mask],
+                                                                                       extrapolate)
+            elif self.density_instruction[contour] == 'NOMINAL':
+                flat_density[flat_mask] = np.array(self.tissue_converter[contour].media_density_series[medium].tolist())
             else:
-                egsphant.density[index] = float(self.density_instruction[in_structure])
+                flat_density[flat_mask] = float(self.density_instruction[contour])
+
+        egsphant.phantom = flat_phantom.reshape(ctdata.dimensions, order='F')
+        egsphant.density = flat_density.reshape(ctdata.dimensions, order='F')
         return egsphant
 
     def setup_egsphant(self, ctdata):
@@ -154,6 +137,33 @@ class CTConversionToEGSphant:
 
         return egsphant
 
+    def setup_contour_masks(self, ctdata, contour_path_dict):
+        contour_mask_dict = defaultdict(dict)
+        total_cumulative_mask = np.zeros(ctdata.dimensions, dtype=bool, order='F')
+        for name in self.contour_order[0:-1]:
+            mask_array = np.zeros(ctdata.dimensions, dtype=bool, order='F')
+            for k in range(ctdata.dimensions[2]):
+                if k in contour_path_dict[name]:
+                    temp_cumulative_mask = np.zeros(ctdata.dimensions[0:2], dtype=bool, order='F')
+                    for path in contour_path_dict[name][k]:
+                        temp_mask = path.contains_points(ctdata.pixel_centre_coordinates)
+                        temp_cumulative_mask = temp_cumulative_mask | temp_mask.reshape(ctdata.dimensions[0:2],
+                                                                                        order='F')
+                    mask_array[:, :, k] = temp_cumulative_mask
+            contour_mask_dict[name] = mask_array
+            total_cumulative_mask = total_cumulative_mask | mask_array
+
+        contour_mask_dict['REMAINDER'] = np.invert(total_cumulative_mask)
+
+        # tackle structure priorities now...
+        total_cumulative_mask = contour_mask_dict[self.contour_order[0]]
+        for name in self.contour_order[1:-1]:  # nothing to do for first and last contours (last is REMAINDER)
+            voxels_left = np.invert(total_cumulative_mask)
+            contour_mask_dict[name] = voxels_left & contour_mask_dict[name]
+            total_cumulative_mask = total_cumulative_mask | contour_mask_dict[name]
+
+        return contour_mask_dict
+
 
 def setup_ctdata_dictionary(ctdata):
     ctdata_dict = {}
@@ -162,14 +172,14 @@ def setup_ctdata_dictionary(ctdata):
     n = int(ctdata.nvox() / 10)
     xybounds = ctdata.bounds[0:2]
     print("Setting up the CT data for conversion...")
+    # TODO do not calculate the pixel centre from ij for EVERY slice! They're the same!
     for (index, ctnum) in np.ndenumerate(ctdata.image):
         i, j, k = index
         loop_counter += 1
         if loop_counter % n == 0:
             print("{:d}%...".format(print_counter))
             print_counter += 10
-        (x, y) = voxelnav.get_pixel_center_from_ij((i, j), xybounds)
-        ctdata_dict[index] = (ctnum, (x, y), k)
+        ctdata_dict[index] = (ctnum, voxelnav.get_pixel_center_from_ij((i, j), xybounds), k)
     print("CT data ready!")
     return ctdata_dict
 
@@ -189,3 +199,5 @@ def setup_contour_path_dictionary(ctdata, contour_info_dict):
 
     print("Contour data ready!")
     return contour_path_dict
+
+
