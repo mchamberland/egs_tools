@@ -181,10 +181,10 @@ class CTConversionToEGSphant:
     def setup_contour_masks(self, ctdata, contour_path_dict):
         contour_mask_dict = defaultdict(dict)
         total_cumulative_mask = np.zeros(ctdata.dimensions, dtype=bool, order='F')
-        for name, contour_path in contour_path_dict.items():
-            mask_array = total_cumulative_mask
+        for name in self.contour_order[0:-1]:
+            mask_array = np.zeros(ctdata.dimensions, dtype=bool, order='F')
             for k in range(ctdata.dimensions[2]):
-                if k in contour_path:
+                if k in contour_path_dict[name]:
                     temp_cumulative_mask = np.zeros(ctdata.dimensions[0:2], dtype=bool, order='F')
                     for path in contour_path_dict[name][k]:
                         temp_mask = path.contains_points(ctdata.pixel_centre_coordinates)
@@ -199,7 +199,8 @@ class CTConversionToEGSphant:
         # tackle structure priorities now...
         total_cumulative_mask = contour_mask_dict[self.contour_order[0]]
         for name in self.contour_order[1:-1]:  # nothing to do for first and last contours (last is REMAINDER)
-            contour_mask_dict[name] = contour_mask_dict[name] ^ (total_cumulative_mask & contour_mask_dict[name])
+            voxels_left = np.invert(total_cumulative_mask)
+            contour_mask_dict[name] = voxels_left & contour_mask_dict[name]
             total_cumulative_mask = total_cumulative_mask | contour_mask_dict[name]
 
         return contour_mask_dict

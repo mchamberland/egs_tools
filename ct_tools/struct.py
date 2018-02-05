@@ -55,7 +55,10 @@ def get_contours_from_dicom(directory='.'):
 
     contour_dict_by_label = {}
     for (key, value) in contour_dict.items():
-        contour_dict_by_label[contour_dict[key].name] = contour_dict[key]
+        if contour_dict[key].type == 'BRACHY_CHANNEL':
+            pass
+        else:
+            contour_dict_by_label[contour_dict[key].name] = contour_dict[key]
 
     return contour_dict_by_label
 

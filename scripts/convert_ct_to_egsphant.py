@@ -191,4 +191,6 @@ if args.write_ctdata:
 
 ctconversion = cte.CTConversionToEGSphant(args.ctscheme, contours, is_verbose=args.verbose)
 egsphant = ctconversion.convert_to_egsphant(ctdata)
+print('Writing egsphant...')
 egsphant.write_egsphant(join(args.directory, base_name))
+print('Done!')
