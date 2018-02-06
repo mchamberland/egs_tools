@@ -144,25 +144,6 @@ class CTConversionToEGSphant:
         return contour_mask_dict
 
 
-def setup_ctdata_dictionary(ctdata):
-    ctdata_dict = {}
-    loop_counter = 0
-    print_counter = 10
-    n = int(ctdata.nvox() / 10)
-    xybounds = ctdata.bounds[0:2]
-    print("Setting up the CT data for conversion...")
-    # TODO do not calculate the pixel centre from ij for EVERY slice! They're the same!
-    for (index, ctnum) in np.ndenumerate(ctdata.image):
-        i, j, k = index
-        loop_counter += 1
-        if loop_counter % n == 0:
-            print("{:d}%...".format(print_counter))
-            print_counter += 10
-        ctdata_dict[index] = (ctnum, voxelnav.get_pixel_center_from_ij((i, j), xybounds), k)
-    print("CT data ready!")
-    return ctdata_dict
-
-
 def setup_contour_path_dictionary(ctdata, contour_info_dict):
     contour_path_dict = defaultdict(dict)
     zbounds = ctdata.bounds[2]
