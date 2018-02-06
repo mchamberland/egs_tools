@@ -6,10 +6,10 @@ from scipy.spatial import cKDTree
 from matplotlib.path import Path
 
 
-# TODO should use shapely instead of matplotlib.path
-# TODO should also store bounding box for each contour on each slice, to avoid having to check so many points
 def get_contours_from_dicom(directory='.'):
     filenames, rt_structs = bdr.read_structure_files_in_directory(directory)
+    if not rt_structs:
+        return None
     if len(rt_structs) > 1:
         raise Exception("There are more than 1 RT Structure files in the directory."
                         "Please select a directory with a single RT Structure file")

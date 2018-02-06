@@ -70,17 +70,17 @@ class CTConversionToEGSphant:
 
     def convert_to_egsphant(self, ctdata, extrapolate=False):
         egsphant = self.setup_egsphant(ctdata)
-        contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
 
-        print("Converting CT data to egsphant. This may take a while...")
+        print("Converting CT data to egsphant...")
         if not self.contour_info_dictionary:
             mask_dict = {'REMAINDER': np.full(ctdata.dimensions, True, order='F')}
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
         else:
+            contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
             mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
 
-        print("Conversion completed! (Whew!)")
+        print("Conversion completed!")
         return egsphant
 
     def _convert_using_contour_masks(self, egsphant, ctdata, mask_dict, extrapolate):
