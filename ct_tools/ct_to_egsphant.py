@@ -73,30 +73,9 @@ class CTConversionToEGSphant:
         contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
 
         print("Converting CT data to egsphant. This may take a while...")
-        # TODO use same approach as the masks for this case
-        # easy case: no contours, use REMAINDER
         if not self.contour_info_dictionary:
-            contour = 'REMAINDER'
-            loop_counter = 0
-            print_counter = 10
-            n = int(ctdata.nvox() / 10)
-            for (index, ctnum) in np.ndenumerate(ctdata.image):
-                loop_counter += 1
-                if loop_counter % n == 0:
-                    print("{:d}%...".format(print_counter))
-                    print_counter += 10
-                medium = self.tissue_converter[contour].get_medium_name_from_ctnum(ctnum)
-                medium_key = egsphant.get_medium_key(medium)
-                egsphant.phantom[index] = medium_key
-
-                if self.density_instruction[contour] == 'CT':
-                    egsphant.density[index] = self.density_converter.get_density_from_hu(ctnum, extrapolate)
-                elif self.density_instruction[contour] == 'NOMINAL':
-                    medium_index = self.tissue_converter[contour].get_medium_index_from_ctnum(ctnum)
-                    density = self.tissue_converter[contour].get_medium_density(medium_index)
-                    egsphant.density[index] = density
-                else:
-                    egsphant.density[index] = float(self.density_instruction[contour])
+            mask_dict = {'REMAINDER': np.full(ctdata.dimensions, True, order='F')}
+            egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
         else:
             mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
