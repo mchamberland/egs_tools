@@ -10,6 +10,8 @@ from egsphant.egsphant import EGSphant
 from ct_tools.ct_to_tissue import CTConversionToTissue
 
 
+# TODO delete unused contours from contour_info_dictionary so that create_contour_masks does not rely on contour_order
+# TODO spit create_contour_masks out of the CTConversionToEGSphant class so it can be used by itself
 class CTConversionToEGSphant:
     def __init__(self, ctscheme_filename=None, contour_dict=None, directory='.', is_verbose=False):
         self.directory = directory
@@ -78,7 +80,7 @@ class CTConversionToEGSphant:
         else:
             contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
             print("Creating masks from contours...")
-            mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
+            mask_dict = self.create_contour_masks(ctdata, contour_path_dict)
             adjusted_mask_dict = self.adjust_contour_masks_by_priorities(mask_dict)
             print("Creating the egsphant...")
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, adjusted_mask_dict, extrapolate)
@@ -119,7 +121,7 @@ class CTConversionToEGSphant:
 
         return egsphant
 
-    def setup_contour_masks(self, ctdata, contour_path_dict):
+    def create_contour_masks(self, ctdata, contour_path_dict):
         contour_mask_dict = defaultdict(dict)
         total_cumulative_mask = np.zeros(ctdata.dimensions, dtype=bool, order='F')
         for name in self.contour_order[0:-1]:
