@@ -77,8 +77,10 @@ class CTConversionToEGSphant:
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
         else:
             contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
+            print("Creating masks from contours...")
             mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
             adjusted_mask_dict = self.adjust_contour_masks_by_priorities(mask_dict)
+            print("Creating the egsphant...")
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, adjusted_mask_dict, extrapolate)
 
         print("Conversion completed!")
@@ -148,6 +150,7 @@ class CTConversionToEGSphant:
 
 
 def setup_contour_path_dictionary(ctdata, contour_info_dict):
+    print("Preparing contour data...")
     contour_path_dict = defaultdict(dict)
     zbounds = ctdata.bounds[2]
     for name, contour in contour_info_dict.items():
@@ -160,7 +163,6 @@ def setup_contour_path_dictionary(ctdata, contour_info_dict):
             else:
                 contour_path_dict[name][k].append(contour_info_dict[name].contour_as_path[round(zslice, 4)])
 
-    print("Contour data ready!")
     return contour_path_dict
 
 
