@@ -78,7 +78,8 @@ class CTConversionToEGSphant:
         else:
             contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
             mask_dict = self.setup_contour_masks(ctdata, contour_path_dict)
-            egsphant = self._convert_using_contour_masks(egsphant, ctdata, mask_dict, extrapolate)
+            adjusted_mask_dict = self.adjust_contour_masks_by_priorities(mask_dict)
+            egsphant = self._convert_using_contour_masks(egsphant, ctdata, adjusted_mask_dict, extrapolate)
 
         print("Conversion completed!")
         return egsphant
@@ -134,7 +135,9 @@ class CTConversionToEGSphant:
 
         contour_mask_dict['REMAINDER'] = np.invert(total_cumulative_mask)
 
-        # tackle structure priorities now...
+        return contour_mask_dict
+
+    def adjust_contour_masks_by_priorities(self, contour_mask_dict):
         total_cumulative_mask = contour_mask_dict[self.contour_order[0]]
         for name in self.contour_order[1:-1]:  # nothing to do for first and last contours (last is REMAINDER)
             voxels_left = np.invert(total_cumulative_mask)
