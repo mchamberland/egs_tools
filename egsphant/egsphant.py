@@ -177,7 +177,10 @@ class EGSphant:
 
             egsphant.write('\t'.join(str(0.25) for i in range(self.number_of_media)) + '\n')
 
-            egsphant.write('\t'.join(str(n) for n in self.dimensions) + '\n')
+            dimensions = ''
+            for i in range(3):
+                dimensions += format(str(self.dimensions[i]), '<5')
+            egsphant.write(dimensions + '\n')
 
             egsphant.write('\n'.join(' '.join(format(b, '.4f') for b in d) for d in self.bounds))
 
