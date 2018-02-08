@@ -194,7 +194,16 @@ class EGSphant:
                 phantom_str += '\n'
             egsphant.write(phantom_str)
 
-            egsphant.write(' '.join('{:.8g}'.format(d) for d in self.density.flatten(order='F')) + '\n')
+            density_str = '\n'
+            for k in range(0, self.dimensions[2]):
+                for j in range(0, self.dimensions[1]):
+                    line = ''
+                    for i in range(0, self.dimensions[0]):
+                        line += str(self.density[(i, j, k)]) + '\t'
+                    line = line.rstrip()
+                    density_str += line + '\n'
+                density_str += '\n'
+            egsphant.write(density_str)
 
     @classmethod
     def create_water_egsphant(cls, bounds: List[List[float]]):
