@@ -89,7 +89,7 @@ class CTConversionToEGSphant:
             print("Creating masks from contours...")
             mask_dict = create_contour_masks(ctdata, contour_path_dict)
             if self.write_masks:
-                write_contour_masks(mask_dict, base_name)
+                write_contour_mask_dict(mask_dict, base_name)
             adjusted_mask_dict = self.adjust_contour_masks_by_priorities(mask_dict)
             print("Creating the egsphant...")
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, adjusted_mask_dict, extrapolate)
@@ -161,9 +161,15 @@ def create_contour_masks(ctdata, contour_path_dict):
     return contour_mask_dict
 
 
-def write_contour_masks(contour_mask_dict, base_name=None):
-    for name, mask in contour_mask_dict.items():
-        np.save(base_name + '_' + name, mask)
+def write_contour_mask_dict(contour_mask_dict, base_name=None):
+    np.save(base_name + '_masks', contour_mask_dict)
+
+
+def load_contour_mask_dict(filename):
+    if not filename.endswith('_masks.npy'):
+        filename += '_masks.npy'
+
+    return np.load(filename)[()]
 
 
 def setup_contour_path_dictionary(ctdata, contour_info_dict):
