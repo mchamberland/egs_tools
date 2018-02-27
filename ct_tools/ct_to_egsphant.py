@@ -11,7 +11,7 @@ from ct_tools.ct_to_tissue import CTConversionToTissue
 
 
 class CTConversionToEGSphant:
-    def __init__(self, ctscheme_filename=None, contour_dict=None, directory='.', is_verbose=False):
+    def __init__(self, ctscheme_filename=None, contour_dict=None, directory='.', is_verbose=False, write_masks=False):
         self.directory = directory
         self.contour_info_dictionary = contour_dict
         self.density_converter = None
@@ -20,6 +20,7 @@ class CTConversionToEGSphant:
         self.media_list = []
         self.contour_order = []
         self.is_verbose = is_verbose
+        self.write_masks = write_masks
         if ctscheme_filename:
             self.read_ctscheme_file(ctscheme_filename)
 
@@ -76,7 +77,7 @@ class CTConversionToEGSphant:
 
         self.media_list = set(temp_media_list)
 
-    def convert_to_egsphant(self, ctdata, extrapolate=False):
+    def convert_to_egsphant(self, ctdata, base_name=None, extrapolate=False):
         egsphant = self.setup_egsphant(ctdata)
 
         print("Converting CT data to egsphant...")
@@ -87,6 +88,8 @@ class CTConversionToEGSphant:
             contour_path_dict = setup_contour_path_dictionary(ctdata, self.contour_info_dictionary)
             print("Creating masks from contours...")
             mask_dict = create_contour_masks(ctdata, contour_path_dict)
+            if self.write_masks:
+                write_contour_masks(mask_dict, base_name)
             adjusted_mask_dict = self.adjust_contour_masks_by_priorities(mask_dict)
             print("Creating the egsphant...")
             egsphant = self._convert_using_contour_masks(egsphant, ctdata, adjusted_mask_dict, extrapolate)
@@ -156,6 +159,11 @@ def create_contour_masks(ctdata, contour_path_dict):
     contour_mask_dict['REMAINDER'] = np.invert(total_cumulative_mask)
 
     return contour_mask_dict
+
+
+def write_contour_masks(contour_mask_dict, base_name=None):
+    for name, mask in contour_mask_dict.items():
+        np.save(base_name + '_' + name, mask)
 
 
 def setup_contour_path_dictionary(ctdata, contour_info_dict):

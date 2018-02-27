@@ -50,6 +50,10 @@ parser.add_argument('-m', '--match_dose_grid', dest='match', type=float, nargs=3
 parser.add_argument('-w', '--write_ctdata', action='store_true',
                     help='The CT data will be written to a text file before conversion to egsphant.')
 
+parser.add_argument('--write_masks', action='store_true',
+                    help='The contour masks will be written out as binary .npy files so they can be read and used later'
+                         'for dose-volume analysis.')
+
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='Increase verbosity.')
 
@@ -192,8 +196,9 @@ if args.write_ctdata:
     ctdata.write_to_file(join(args.directory, base_name))
 
 
-ctconversion = cte.CTConversionToEGSphant(args.ctscheme, contours, is_verbose=args.verbose)
-egsphant = ctconversion.convert_to_egsphant(ctdata)
+ctconversion = cte.CTConversionToEGSphant(args.ctscheme, contours, is_verbose=args.verbose,
+                                          write_masks=args.write_masks)
+egsphant = ctconversion.convert_to_egsphant(ctdata, join(args.directory, base_name))
 print('Writing egsphant...')
 egsphant.write_egsphant(join(args.directory, base_name))
 print('Done!')
