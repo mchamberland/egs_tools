@@ -47,7 +47,14 @@ def get_contours_from_dicom(directory='.'):
             for zslice in temp_data:
                 x, y, z = list(zip(*zslice))
                 contour_data.append(list(zip(x, y)))
-                contour_as_path[round(z[0], 4)] = Path(list(zip(x, y)), closed=True)
+                # some structures have multiple contours on the same slice (e.g., ribs), so first check that there are
+                # no contours currently stored for this slice; otherwise, append the contour to the list
+                z_value = round(z[0], 4)
+                if z_value not in contour_as_path:
+                    contour_as_path[z_value] = [Path(list(zip(x, y)), closed=True)]
+                else:
+                    contour_as_path[z_value].append(Path(list(zip(x, y)), closed=True))
+
                 zslices.append(z[0])
             contour_dict[number].zslices = zslices
             contour_dict[number].contour_data = contour_data

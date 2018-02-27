@@ -165,12 +165,7 @@ def setup_contour_path_dictionary(ctdata, contour_info_dict):
     for name, contour in contour_info_dict.items():
         for zslice in contour.zslices:
             k = voxelnav.get_index_from_position(zslice, zbounds)
-            # some structures have multiple contours on the same slice (e.g., ribs), so first check that there are no
-            # contours currently stored for this slice; otherwise, append the contour to the list
-            if k not in contour_path_dict:
-                contour_path_dict[name][k] = [contour_info_dict[name].contour_as_path[round(zslice, 4)]]
-            else:
-                contour_path_dict[name][k].append(contour_info_dict[name].contour_as_path[round(zslice, 4)])
+            contour_path_dict[name][k] = contour_info_dict[name].contour_as_path[round(zslice, 4)]
 
     return contour_path_dict
 
