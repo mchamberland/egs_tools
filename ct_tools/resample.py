@@ -15,7 +15,6 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_voxe
         voxel_size_in_cm = [ct.image_size_in_cm()[i] / v for (i, v) in enumerate(voxels)]
     else:
         raise Exception("Argument 'size_or_count' must be either 'size' or 'voxels'.")
-    print("Resampling CT data...")
     print("Requested voxel size:\n{:.4f} mm x {:.4f} mm x {:.4f} mm\n".format(voxel_size_in_cm[0] * 10,
                                                                               voxel_size_in_cm[1] * 10,
                                                                               voxel_size_in_cm[2] * 10))

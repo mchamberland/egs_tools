@@ -176,6 +176,8 @@ if args.resample:
         nx = int(nx)
         ny = int(ny)
         nz = int(nz)
+    print('Original CT dataset description:')
+    ctdata.print_info()
     ctdata = ctr.resample_ctdata(ctdata, (nx, ny, nz), size_or_voxels)
     ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
 
