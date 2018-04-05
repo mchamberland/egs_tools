@@ -1,3 +1,4 @@
+#TO DO Use pydicom's uid module
 import os
 import datetime as dt
 
