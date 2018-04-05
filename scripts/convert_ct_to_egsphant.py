@@ -1,3 +1,4 @@
+#TO DO add option to crop to body contour
 #!/home/mchamber/anaconda3/bin/python
 import sys
 import os
