@@ -140,7 +140,7 @@ class DoseDistribution:
             file = open(filename, 'wt')
 
         file.write(' '.join(str(vox) for vox in self.dimensions) + '\n')
-        file.write('\n'.join(' '.join(format(b, '.4f') for b in d) for d in self.bounds) + '\n')
+        file.write('\n'.join(' '.join(format(b, '.4g') for b in d) for d in self.bounds) + '\n')
         file.write(' '.join('{:.8g}'.format(d) for d in self.dose.flatten('F')) + '\n')
         file.write(' '.join('{:.8f}'.format(u) for u in self.fract_unc.flatten('F')) + '\n')
         file.close()
