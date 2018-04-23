@@ -1,4 +1,4 @@
-#!/home/mchamber/anaconda3/bin/python
+#!/home/mchamber/anaconda3/envs/py3/bin/python
 import argparse
 import dose_distribution.dose3d as dd
 import dose_distribution.manip as dman
