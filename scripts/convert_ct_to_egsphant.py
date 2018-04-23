@@ -1,4 +1,4 @@
-#!/home/mchamber/anaconda3/bin/python
+#!/home/mchamber/anaconda3/envs/py3/bin/python
 import sys
 import os
 import argparse

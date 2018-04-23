@@ -196,5 +196,30 @@ def tri_linear_interp_dose_xyz(the_dose3d: DoseDistribution, pos: Tuple[float, f
     else:
         return 0, 1
 
-# TODO add dose comparison methods, similar to 3ddose_tools.
+
+def calculate_normalized_differences(dose1: DoseDistribution,
+                                     dose2: DoseDistribution, threshold=0, units='%') -> np.ndarray:
+    if not np.array_equal(dose1.bounds, dose2.bounds):
+        raise Exception('The dose distributions do not have the same dimensions or bounds. This is not supported.')
+
+    if not are_valid_units_for_comparison(units):
+        raise Exception('Units have to be ''%'' or ''Gy''.')
+
+    if units == '%':
+        mask1 = dose1.dose > dose1.dose.max() * threshold / 100
+        mask2 = dose2.dose > dose2.dose.max() * threshold / 100
+    else:
+        mask1 = dose1.dose > dose1.dose.max() * threshold
+        mask2 = dose2.dose > dose2.dose.max() * threshold
+
+    mask = mask1 & mask2
+
+    return (dose1.dose[mask] - dose2.dose[mask]) / \
+        np.sqrt((dose1.dose[mask] * dose1.fract_unc[mask])**2 + (dose2.dose[mask] * dose2.fract_unc[mask])**2)
+
+
+def are_valid_units_for_comparison(units: str) -> bool:
+    return (units == '%') or (units.lower() == 'gy')
+
+
 # TODO add histogram plotting for comparison methods
