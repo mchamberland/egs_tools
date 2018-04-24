@@ -1,5 +1,6 @@
 #!/home/mchamber/anaconda3/envs/py3/bin/python
 import argparse
+from os.path import basename
 import dose_distribution.dose3d as dd
 import dose_distribution.manip as dman
 import matplotlib.pyplot as plt
@@ -33,4 +34,5 @@ t = dman.calculate_normalized_differences(dose_compare, dose_reference, args.thr
 mean, stdev = norm.fit(t)
 plt.hist(t, bins=30)
 plt.title(r'$\mathrm{Histogram\ of\ t:}\ \mu=%.3f,\ \sigma=%.3f$' % (mean, stdev))
+plt.savefig('{}_vs_{}.png'.format(basename(args.dose_compare), basename(args.dose_reference)))
 plt.show()
