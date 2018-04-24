@@ -1,6 +1,6 @@
 #!/home/mchamber/anaconda3/envs/py3/bin/python
 import argparse
-from os.path import basename
+from os.path import splitext, basename
 import dose_distribution.dose3d as dd
 import dose_distribution.manip as dman
 import matplotlib.pyplot as plt
@@ -8,10 +8,11 @@ from scipy.stats import norm
 
 parser = argparse.ArgumentParser(description='Compare 2 3ddose distributions.')
 
-parser.add_argument('dose_reference',
-                    help='The reference dose.')
 parser.add_argument('dose_compare',
                     help='The dose that is being compared to the reference.')
+
+parser.add_argument('dose_reference',
+                    help='The reference dose.')
 
 parser.add_argument('-t', '--threshold', dest='threshold', type=float, default=0,
                     help='The dose threshold for the comparison. The threshold can be a percentage of the maximum dose'
@@ -27,12 +28,13 @@ parser.add_argument('-n', '--nbins', dest='nbins', type=int, default=30,
 args = parser.parse_args()
 
 
-dose_reference = dd.DoseDistribution(args.dose_reference)
 dose_compare = dd.DoseDistribution(args.dose_compare)
+dose_reference = dd.DoseDistribution(args.dose_reference)
 
 t = dman.calculate_normalized_differences(dose_compare, dose_reference, args.threshold, args.units)
 mean, stdev = norm.fit(t)
 plt.hist(t, bins=30)
 plt.title(r'$\mathrm{Histogram\ of\ t:}\ \mu=%.3f,\ \sigma=%.3f$' % (mean, stdev))
-plt.savefig('{}_vs_{}.png'.format(basename(args.dose_compare), basename(args.dose_reference)))
+plt.savefig('{}_vs_{}.png'.format(splitext(basename(args.dose_compare))[0],
+                                  splitext(basename(args.dose_reference))[0]))
 plt.show()
