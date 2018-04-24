@@ -199,8 +199,11 @@ def tri_linear_interp_dose_xyz(the_dose3d: DoseDistribution, pos: Tuple[float, f
 
 def calculate_normalized_differences(dose1: DoseDistribution,
                                      dose2: DoseDistribution, threshold=0, units='%') -> np.ndarray:
-    if not np.array_equal(dose1.bounds, dose2.bounds):
-        raise Exception('The dose distributions do not have the same dimensions or bounds. This is not supported.')
+    if not np.array_equal(dose1.dimensions, dose2.dimensions):
+        raise Exception('The dose distributions do not have the same dimensions. This is not supported.')
+
+    if not voxelnav.are_bounds_within_tolerance(dose1.bounds, dose2.bounds):
+        raise Exception('The dose distributions do not have the same bounds. This is not supported.')
 
     if not are_valid_units_for_comparison(units):
         raise Exception('Units have to be ''%'' or ''Gy''.')
@@ -220,6 +223,3 @@ def calculate_normalized_differences(dose1: DoseDistribution,
 
 def are_valid_units_for_comparison(units: str) -> bool:
     return (units == '%') or (units.lower() == 'gy')
-
-
-# TODO add histogram plotting for comparison methods

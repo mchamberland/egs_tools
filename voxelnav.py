@@ -1,4 +1,5 @@
 import operator
+import numpy as np
 from typing import List, Tuple
 
 
@@ -345,3 +346,7 @@ def get_prev_z_neighbour(index3d: Tuple[int, int, int]):
         return k
     else:
         return k - 1
+
+
+def are_bounds_within_tolerance(bounds3d1: List[List[float]], bounds3d2: List[List[float]]) -> bool:
+    return np.all([np.allclose(bounds3d1[i], bounds3d2[i]) for i in range(len(bounds3d1))])
