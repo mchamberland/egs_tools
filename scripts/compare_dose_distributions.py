@@ -3,6 +3,7 @@ import argparse
 import dose_distribution.dose3d as dd
 import dose_distribution.manip as dman
 import matplotlib.pyplot as plt
+from scipy.stats import norm
 
 parser = argparse.ArgumentParser(description='Compare 2 3ddose distributions.')
 
@@ -29,5 +30,7 @@ dose_reference = dd.DoseDistribution(args.dose_reference)
 dose_compare = dd.DoseDistribution(args.dose_compare)
 
 t = dman.calculate_normalized_differences(dose_compare, dose_reference, args.threshold, args.units)
+mean, stdev = norm.fit(t)
 plt.hist(t, bins=30)
+plt.title(r'$\mathrm{Histogram\ of\ t:}\ \mu=%.3f,\ \sigma=%.3f$' % (mean, stdev))
 plt.show()
