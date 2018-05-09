@@ -37,6 +37,9 @@ parser.add_argument('-c', '--crop', type=float, nargs='*',
                     help='Crop the CT dataset to the (x1, x2, y1, y2, z1, z2) bounds specified (in cm). If a single '
                          'value n is passed, then the set is cropped to a cube of size n at the centre of the dataset')
 
+parser.add_argument('--crop_to_body', action='store_true',
+                    help='Crop the dataset to the extents of the body contour.')
+
 parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
                          'the size is specified in cm (''size'') or in voxels (''voxels'').')
@@ -183,14 +186,22 @@ if args.resample:
     ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
 
 
+contours = cts.get_contours_from_dicom(args.directory)
+
+
+if args.crop_to_body:
+    if args.verbose:
+        print('Cropping CT dataset to body contour...')
+    bounds = cts.get_extents_of_contour(contours['body'].zslices, contours['body'].contour_as_path)
+    ctdata = ctd.crop_ctdata_to_bounds(ctdata, bounds)
+    ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
+
+
 if args.crop:
     if args.verbose:
         print('Cropping CT dataset...')
     ctdata = ctd.crop_ctdata_to_bounds(ctdata, args.crop)
     ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
-
-
-contours = cts.get_contours_from_dicom(args.directory)
 
 
 if args.write_ctdata:

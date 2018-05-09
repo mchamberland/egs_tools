@@ -160,3 +160,25 @@ class MissingSlices:
         self.start_index = start
         self.number_of_missing_slices = number
         self.thickness = thickness
+
+
+def get_extents_of_contour(zslices, paths) -> (float, float, float, float, float, float):
+
+    zmin = min(zslices)
+    zmax = max(zslices)
+
+    xmin, ymin = 1e5, 1e5
+    xmax, ymax = -1e5, -1e5
+    for zslice, contours_on_slice in paths.items():
+        for contour in contours_on_slice:
+            xmin_tmp, ymin_tmp, xmax_tmp, ymax_tmp = contour.get_extents().extents
+            if xmin_tmp < xmin:
+                xmin = xmin_tmp
+            if ymin_tmp < ymin:
+                ymin = ymin_tmp
+            if xmax_tmp > xmax:
+                xmax = xmax_tmp
+            if ymax_tmp > ymax:
+                ymax = ymax_tmp
+
+    return xmin, xmax, ymin, ymax, zmin, zmax
