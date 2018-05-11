@@ -33,7 +33,7 @@ dose_reference = dd.DoseDistribution(args.dose_reference)
 
 t = dman.calculate_normalized_differences(dose_compare, dose_reference, args.threshold, args.units)
 mean, stdev = norm.fit(t)
-plt.hist(t, bins=30)
+plt.hist(t, bins=args.nbins)
 plt.title(r'$\mathrm{Histogram\ of\ t:}\ \mu=%.3f,\ \sigma=%.3f$' % (mean, stdev))
 plt.savefig('{}_vs_{}.png'.format(splitext(basename(args.dose_compare))[0],
                                   splitext(basename(args.dose_reference))[0]))
