@@ -11,8 +11,6 @@ import ct_tools.ct_to_egsphant as cte
 import dicom.reader as bdr
 import dicom.rtdose as rtd
 
-# TODO add option to crop to body contour
-
 parser = argparse.ArgumentParser(description='Convert a DICOM CT dataset to the EGSnrc egsphant format.')
 
 parser.add_argument('directory',
