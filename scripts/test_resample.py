@@ -1,4 +1,3 @@
-#!/home/mchamber/venvs/py-3.6/bin/python
 import ct_tools.resample as ctr
 import numpy as np
 

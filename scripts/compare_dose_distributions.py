@@ -1,4 +1,3 @@
-#!/home/mchamber/anaconda3/envs/py3/bin/python
 import argparse
 from os.path import splitext, basename
 import dose_distribution.dose3d as dd

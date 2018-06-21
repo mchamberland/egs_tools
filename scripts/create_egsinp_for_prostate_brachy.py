@@ -1,4 +1,3 @@
-#!/home/mchamber/anaconda3/envs/py3/bin/python
 import sys
 import os
 from os.path import join
