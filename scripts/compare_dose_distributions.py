@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 from os.path import splitext, basename
 import dose_distribution.dose3d as dd
