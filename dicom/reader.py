@@ -6,7 +6,8 @@ from typing import Tuple
 import datetime
 
 SOURCE_MODELS = {'I-125 (6711) [TG43 updated]': 'OncoSeed_6711',
-                 'I-125(AgX100)': 'AgX100'}
+                 'I-125(AgX100)': 'AgX100',
+                 'Au 198': 'Best_Au198'}
 
 
 def list_all_files_in_directory(directory='.'):

@@ -26,22 +26,26 @@ class EGSinp:
                            'AgX100': 'I125_LDR',
                            'TheraSeed_200': 'Pd103_LDR',
                            'microSelectron-v2': 'Ir192_HDR',
-                           'GammaMedPlus': 'Ir192_HDR'}
+                           'GammaMedPlus': 'Ir192_HDR',
+                           'Best_Au198': 'Au198'}
 
     RADIONUCLIDE_SPECTRUM = {'I125_LDR': 'I125_NCRP_line',
                              'Pd103_LDR': 'Pd103_NNDC_2.6_line',
-                             'Ir192_HDR': 'Ir192_NNDC_2.6_line'}
+                             'Ir192_HDR': 'Ir192_NNDC_2.6_line',
+                             'Au198': 'Au198_NNDC_2.6_line'}
 
     MEAN_LIFETIME_IN_HOURS = {'I125_LDR': 2056.7,
                               'Pd103_LDR': 588.3,
-                              'Ir192_HDR': 2556.3}
+                              'Ir192_HDR': 2556.3,
+                              'Au198': 93.3}
 
     # in units of Gy cm^2 hist^-1
     SOURCE_AIR_KERMA_STRENGTH_PER_HISTORY = {'OncoSeed_6711': 3.7651E-14,
                                              'AgX100': 3.9468E-14,
                                              'TheraSeed_200': 6.4255E-14,
                                              'microSelectron-v2': 1.1517E-13,
-                                             'GammaMedPlus': 1.1592E-13}
+                                             'GammaMedPlus': 1.1592E-13,
+                                             'Best_Au198': 1.3567E-13}
 
     t1 = "\n\t"
     t2 = "\n\t\t"
