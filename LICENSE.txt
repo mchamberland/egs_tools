@@ -1,0 +1,17 @@
+egs_tools LICENSE
+Copyright (C) 2018 Marc J.P. Chamberland
+
+This file is part of egs_tools
+
+egs_tools is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+egs_tools is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Affero General Public License for more details:
+<http://www.gnu.org/licenses/>.
+
+Author:        Marc J.P. Chamberland, 2018
