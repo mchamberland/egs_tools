@@ -83,7 +83,11 @@ else:
 if args.verbose:
     print('Reading CT dataset...\n')
 if not args.input_ctdata:
-    ctdata = ctd.get_ctdata_from_dicom(args.directory)
+    if bdr.list_ct_files_in_directory(args.directory):
+        ctdata = ctd.get_ctdata_from_dicom(args.directory)
+    else:
+        print('There is no CT dataset in directory {}. Aborting.'.format(base_name))
+        sys.exit()
 else:
     ctdata = ctd.read_ctdata(join(args.directory, args.input_ctdata))
 
