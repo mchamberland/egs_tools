@@ -28,7 +28,7 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], cm_or_voxels
     resampled.bounds = bounds
     resampled.image = np.zeros(dimensions)
 
-    resampled.image = skit.resize(ct.image, dimensions, preserve_range=True)
+    resampled.image = skit.resize(ct.image, dimensions, preserve_range=True, mode='constant')
 
     return resampled
 
