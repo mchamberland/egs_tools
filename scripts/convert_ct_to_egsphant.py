@@ -18,6 +18,9 @@ parser.add_argument('directory',
 parser.add_argument('ctscheme',
                     help='The name of the ctscheme conversion file.')
 
+parser.add_argument('-o', '--output', dest='output_name',
+                    help='Name of the output egsphant.')
+
 parser.add_argument('-r', '--read_ctdata', dest='input_ctdata',
                     help='Read in a .ctdata file instead of a DICOM CT dataset. The .ctdata file is expected to be in '
                          'the directory provided as the first argument of the script.')
@@ -216,5 +219,8 @@ ctconversion = cte.CTConversionToEGSphant(args.ctscheme, contours, is_verbose=ar
                                           write_masks=args.write_masks)
 egsphant = ctconversion.convert_to_egsphant(ctdata, join(args.directory, base_name))
 print('Writing egsphant...')
-egsphant.write_egsphant(join(args.directory, base_name))
+if args.output_name:
+    egsphant.write_egsphant(join(args.directory, args.output_name))
+else:
+    egsphant.write_egsphant(join(args.directory, base_name))
 print('Done!')
