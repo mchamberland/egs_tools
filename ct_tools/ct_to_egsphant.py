@@ -134,10 +134,10 @@ class CTConversionToEGSphant:
     def adjust_contour_masks_by_priorities(self, contour_mask_dict):
         total_cumulative_mask = contour_mask_dict[self.contour_order[0]]
         for name in self.contour_order[1:-1]:  # nothing to do for first and last contours (last is REMAINDER)
-            voxels_left = np.invert(total_cumulative_mask)
-            contour_mask_dict[name] = voxels_left & contour_mask_dict[name]
-            total_cumulative_mask = total_cumulative_mask | contour_mask_dict[name]
-
+                if name in contour_mask_dict:
+                    voxels_left = np.invert(total_cumulative_mask)
+                    contour_mask_dict[name] = voxels_left & contour_mask_dict[name]
+                    total_cumulative_mask = total_cumulative_mask | contour_mask_dict[name]
         return contour_mask_dict
 
 
