@@ -177,7 +177,7 @@ if args.resample:
     nx, ny, nz, cm_or_voxels = args.resample
     if not (cm_or_voxels == 'cm' or cm_or_voxels == 'voxels'):
         raise Exception('Specify if the resampling is specified in cm (''cm'') or in voxels (''voxels'').')
-    if cm_or_voxels == 'size':
+    if cm_or_voxels == 'cm':
         nx = float(nx)
         ny = float(ny)
         nz = float(nz)
