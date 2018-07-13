@@ -5,13 +5,13 @@ from typing import Tuple
 from ct_tools.ctdata import CTdata
 
 
-def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], size_or_voxels='size') -> CTdata:
+def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], cm_or_voxels='cm') -> CTdata:
     # based on the the resampleCT subroutine in ctcreate.mortran in EGSnrc
     # resampling weighs the original CT values by the fractional volume of each resampled (xyz) voxel that overlaps
     # with a given CT voxel
-    if size_or_voxels == "size":
+    if cm_or_voxels == "cm":
         voxel_size_in_cm = voxels
-    elif size_or_voxels == "voxels":
+    elif cm_or_voxels == "voxels":
         voxel_size_in_cm = [ct.image_size_in_cm()[i] / v for (i, v) in enumerate(voxels)]
     else:
         raise Exception("Argument 'size_or_count' must be either 'size' or 'voxels'.")
