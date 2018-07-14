@@ -106,7 +106,7 @@ class CTConversionToEGSphant:
         for contour, mask in mask_dict.items():
             flat_mask = mask.flatten(order='F')
             medium = self.tissue_converter[contour].get_medium_name_from_ctnum(flat_image[flat_mask])
-            flat_phantom[flat_mask] = np.array(medium_key_mapping[medium].tolist())
+            flat_phantom[flat_mask] = np.array(medium_key_mapping.reindex(medium).tolist())
 
             if self.density_instruction[contour] == 'CT':
                 flat_density[flat_mask] = self.density_converter.get_densities_from_hu(flat_image[flat_mask],
