@@ -43,7 +43,7 @@ parser.add_argument('--crop_to_body', action='store_true',
 
 parser.add_argument('--resample', nargs=4,
                     help='Resample the CT to the desired size (nx, ny, nz, type), where ''type'' specifies whether '
-                         'the size is specified in cm (''size'') or in voxels (''voxels'').')
+                         'the size is specified in cm (''cm'') or in voxels (''voxels'').')
 
 parser.add_argument('-m', '--match_dose_grid', dest='match', type=float, nargs=3,
                     help='The CT dataset will be resampled and cropped to match the dose grid within (tx, ty, tz).'
@@ -142,7 +142,7 @@ if args.match:
             print('Matching the dimensions and resolution to the dose grid...\n')
             print('Dose grid description:')
             dose.print_info()
-        ctdata = ctr.resample_ctdata(ctdata, (dose.dx / 10, dose.dy / 10, dose.dz / 10), 'size')
+        ctdata = ctr.resample_ctdata(ctdata, (dose.dx / 10, dose.dy / 10, dose.dz / 10), 'cm')
         if args.verbose:
             print('Now cropping CT dataset...\n')
         dx, dy, dz = dose.grid_extents
