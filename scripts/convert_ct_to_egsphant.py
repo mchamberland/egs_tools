@@ -200,6 +200,7 @@ if args.crop_to_body:
     bounds = cts.get_extents_of_contour(contours['body'].zslices, contours['body'].contour_as_path)
     ctdata = ctd.crop_ctdata_to_bounds(ctdata, bounds)
     ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
+    ctdata.print_info()
 
 
 if args.crop:
@@ -207,6 +208,7 @@ if args.crop:
         print('Cropping CT dataset...')
     ctdata = ctd.crop_ctdata_to_bounds(ctdata, args.crop)
     ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
+    ctdata.print_info()
 
 
 if args.write_ctdata:
