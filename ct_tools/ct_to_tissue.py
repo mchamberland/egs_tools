@@ -51,7 +51,7 @@ class CTConversionToTissue:
         return np.searchsorted(self.ctnum_bins, ctnum) - 1
 
     def get_medium_name_from_ctnum(self, ctnum):
-        return np.array(self.media_series[np.searchsorted(self.ctnum_bins, ctnum) - 1].tolist())
+        return np.array(self.media_series.reindex(np.searchsorted(self.ctnum_bins, ctnum) - 1).tolist())
 
     def get_media_name_list(self):
         media_name = []
