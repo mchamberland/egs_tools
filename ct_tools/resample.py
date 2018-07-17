@@ -1,5 +1,6 @@
 import numpy as np
 import fractions
+import math
 import skimage.transform as skit
 from typing import Tuple
 from ct_tools.ctdata import CTdata
@@ -19,8 +20,9 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], cm_or_voxels
                                                                               voxel_size_in_cm[1] * 10,
                                                                               voxel_size_in_cm[2] * 10))
 
-    check_requested_voxel_size(ct.image_size_in_cm(), voxel_size_in_cm)
-    dimensions, adjusted_voxel_size = adjust_requested_voxel_size(ct.image_size_in_cm(), voxel_size_in_cm)
+    check_requested_voxel_size(ct.dimensions, ct.voxel_size_in_cm(), voxel_size_in_cm)
+    dimensions, adjusted_voxel_size = adjust_requested_voxel_size(
+        ct.dimensions, ct.voxel_size_in_cm(), voxel_size_in_cm)
     bounds = calculate_new_bounds(ct.bounds, adjusted_voxel_size, dimensions)
 
     resampled = CTdata()
@@ -33,18 +35,24 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], cm_or_voxels
     return resampled
 
 
-def check_requested_voxel_size(ct_image_size, voxel_size):
+def check_requested_voxel_size(ct_dimensions, ct_voxel_size, voxel_size):
     if any(v < 0 for v in voxel_size):
         raise Exception("Voxel size must be positive.")
 
-    if any(v > ct_image_size[i] for (i, v) in enumerate(voxel_size)):
+    if any(v > ct_dimensions[i]*ct_voxel_size[i] for (i, v) in enumerate(voxel_size)):
         raise Exception("Voxel size in any one direction cannot be greater"
                         "than the size of the original CT in this direction.")
 
 
-def adjust_requested_voxel_size(ct_image_size, voxel_size):
-    dimensions = [int(ct_image_size[i] / v) for (i, v) in enumerate(voxel_size)]
-    adjusted_voxel_size = [float(ct_image_size[i] / n) for (i, n) in enumerate(dimensions)]
+def adjust_requested_voxel_size(ct_dimensions, ct_voxel_size, voxel_size):
+    dimensions = [int(ct_dimensions[i] * ct_voxel_size[i] / v) for (i, v) in enumerate(voxel_size)]
+    adjusted_voxel_size = [float(ct_dimensions[i] * ct_voxel_size[i] / n) for (i, n) in enumerate(dimensions)]
+
+    # sometimes, the voxel sizes are really close and it's not worth doing anything
+    for i in range(len(dimensions)):
+        if math.isclose(ct_voxel_size[i], voxel_size[i], rel_tol=1e-6):
+            dimensions[i] = ct_dimensions[i]
+            adjusted_voxel_size[i] = voxel_size[i]
 
     print("Adjusted dimensions so that an integer number of voxels fit exactly on the CT data:\n")
     print("New voxel size:\n{:.4f} mm x {:.4f} mm x {:.4f} mm\n".format(adjusted_voxel_size[0] * 10,
