@@ -1,9 +1,9 @@
 import numpy as np
 import fractions
 import math
-import skimage.transform as skit
 from typing import Tuple
 from ct_tools.ctdata import CTdata
+from ct_tools.resize_non_integer_local_mean import resize
 
 
 def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], cm_or_voxels='cm') -> CTdata:
@@ -30,7 +30,7 @@ def resample_ctdata(ct: CTdata, voxels: Tuple[float, float, float], cm_or_voxels
     resampled.bounds = bounds
     resampled.image = np.zeros(dimensions)
 
-    resampled.image = skit.resize(ct.image, dimensions, preserve_range=True, mode='constant')
+    resampled.image = resize(ct.image, tuple(dimensions))
 
     return resampled
 
