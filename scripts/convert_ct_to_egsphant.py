@@ -191,7 +191,8 @@ if args.resample:
     ctdata.pixel_centre_coordinates = ctdata.calculate_pixel_centre_coordinates()
 
 
-contours = cts.get_contours_from_dicom(args.directory)
+temp = cts.get_contours_from_dicom(args.directory)
+contours = cts.interpolate_contours_from_dict_along_z(temp, ctdata)
 
 
 if args.crop_to_body:

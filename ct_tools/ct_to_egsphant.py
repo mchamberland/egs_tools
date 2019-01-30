@@ -176,7 +176,7 @@ def load_contour_mask_dict(filename):
 def setup_contour_path_dictionary(ctdata, contour_info_dict):
     print("Preparing contour data...")
     contour_path_dict = defaultdict(dict)
-    zbounds = ctdata.bounds[2]
+    zbounds = list(np.round(ctdata.bounds[2], 4))
     for name, contour in contour_info_dict.items():
         for zslice in contour.zslices:
             k = voxelnav.get_index_from_position(zslice, zbounds)

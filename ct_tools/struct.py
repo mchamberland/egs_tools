@@ -70,6 +70,15 @@ def get_contours_from_dicom(directory='.'):
     return contour_dict_by_label
 
 
+def interpolate_contours_from_dict_along_z(contour_dict, ctdata):
+    slice_thickness = ctdata.voxel_size_in_cm()[2]
+    interpolated_contours_dict = {}
+    for label, contour in contour_dict.items():
+        if contour.is_missing_slices(slice_thickness):
+            interpolated_contours_dict[label] = contour.interpolate_missing_slices()
+    return interpolated_contours_dict
+
+
 class Contour:
     def __init__(self, contour_data=None, zslices=None, name=None, number=None, roitype=None, colour=(255, 0, 0)):
         self.name = name
@@ -136,9 +145,21 @@ class Contour:
             temp = list(zip(self.contour_data, self.zslices))
             temp.sort(key=lambda f: f[1])
             self.contour_data, self.zslices = zip(*temp)
+            self.update_contour_as_path()
             self.missing_slices = None
             self.is_interpolated = True
             print("...Sorted!")
+
+            return self
+
+    def update_contour_as_path(self):
+        self.contour_as_path = {}
+        for index, zslice in enumerate(self.zslices):
+            z_value = round(zslice, 4)
+            if z_value not in self.contour_as_path:
+                self.contour_as_path[z_value] = [Path(self.contour_data[index], closed=True)]
+            else:
+                self.contour_as_path[z_value].append(Path(self.contour_data[index], closed=True))
 
     def calculate_voxel_indices_from_contour_data(self, bounds3d: List[List[float]]):
         zindices = []
