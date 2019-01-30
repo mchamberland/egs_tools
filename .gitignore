@@ -6,3 +6,4 @@ anon/
 *.pyc
 *__pycache__
 egsphant_creation_SD.py
+.DS_Store
