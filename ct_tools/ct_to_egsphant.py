@@ -183,5 +183,3 @@ def setup_contour_path_dictionary(ctdata, contour_info_dict):
             contour_path_dict[name][k] = contour_info_dict[name].contour_as_path[round(zslice, 4)]
 
     return contour_path_dict
-
-
